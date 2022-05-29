@@ -182,11 +182,14 @@ export function minLength(min: number, message: string): Validator<string, strin
 }
 
 export function maxLength(max: number, message: string): Validator<string, string> {
-  return fromPredicate((value: string) => value.length <= max, message);
+  return fromPredicate((value: string) => value.trim().length <= max, message);
 }
 
 export function lengthRange(min: number, max: number, message: string): Validator<string, string> {
-  return fromPredicate((value: string) => value.length >= min && value.length <= max, message);
+  return fromPredicate(
+    (value: string) => value.trim().length >= min && value.trim().length <= max,
+    message,
+  );
 }
 
 export function match(pattern: RegExp, message: string): Validator<string, string> {
