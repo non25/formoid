@@ -1,6 +1,6 @@
 {
   "name": "formoid",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "main": "index.ts",
   "author": "kolyamba2105 <haravetskyy@gmail.com>",
   "license": "MIT",
