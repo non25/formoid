@@ -154,19 +154,15 @@ export function defined<A>(message: string): Validator<A, NonNullable<A>> {
 export function validateIf<A, B extends A, O>(
   refinement: Refinement<A, B>,
   innerValidator: Validator<B, O>,
-): Validator<A, O>;
+): Validator<A, A | O>;
 
 export function validateIf<I, O>(
   predicate: Predicate<I>,
   innerValidator: Validator<I, O>,
-): Validator<I, O>;
+): Validator<I, I | O>;
 
 export function validateIf<I, O>(predicate: Predicate<I>, innerValidator: Validator<I, O>) {
   return (input: I) => (predicate(input) ? innerValidator(input) : success(null));
-}
-
-export function validateIfDefined<I, O>(innerValidator: Validator<I, O>) {
-  return validateIf<I, NonNullable<I>, O>(isNonNullable, innerValidator);
 }
 
 export function min(min: number, message: string): Validator<number, number> {
