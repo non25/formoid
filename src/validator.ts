@@ -138,8 +138,8 @@ function isNonNullable<A>(value: A | null | undefined): value is NonNullable<A> 
   return value !== null && value !== undefined;
 }
 
-export function defined<A>(message?: string): Validator<A, NonNullable<A>> {
-  return fromPredicate(isNonNullable, message || "Value must be defined!");
+export function defined<A>(message: string): Validator<A, NonNullable<A>> {
+  return fromPredicate(isNonNullable, message);
 }
 
 /**
