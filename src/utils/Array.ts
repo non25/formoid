@@ -7,10 +7,6 @@ export function isNonEmpty<A>(as: Array<A>): as is NonEmptyArray<A> {
   return as.length > 0;
 }
 
-export function lookup<A>(index: number, as: Array<A>): A | null {
-  return as[index] || null;
-}
-
 export function isOutOfBound<A>(index: number, as: Array<A>): boolean {
   return index < 0 || index >= as.length;
 }
