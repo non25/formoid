@@ -149,26 +149,24 @@ export function defined<A>(message: string): Validator<A, NonNullable<A>> {
  * Validate whether value's length is >= 5 only if value is a non-blank string,
  * otherwise treat value as valid
  *
- * const Value = string;
- *
- * const val = pipe(validator.minLength(5), validator.validateIf(isNonBlankString))
+ * const result = validator.validateIf(isNonBlankString, validator.minLength(5));
  */
 export function validateIf<A, B extends A, O>(
   refinement: Refinement<A, B>,
-): (innerValidator: Validator<B, O>) => Validator<A, O>;
+  innerValidator: Validator<B, O>,
+): Validator<A, O>;
 
 export function validateIf<I, O>(
   predicate: Predicate<I>,
-): (innerValidator: Validator<I, O>) => Validator<I, O>;
+  innerValidator: Validator<I, O>,
+): Validator<I, O>;
 
-export function validateIf<I, O>(predicate: Predicate<I>) {
-  return (innerValidator: Validator<I, O>) => {
-    return (input: I) => (predicate(input) ? innerValidator(input) : success(null));
-  };
+export function validateIf<I, O>(predicate: Predicate<I>, innerValidator: Validator<I, O>) {
+  return (input: I) => (predicate(input) ? innerValidator(input) : success(null));
 }
 
 export function validateIfDefined<I, O>(innerValidator: Validator<I, O>) {
-  return validateIf<I, NonNullable<I>, O>(isNonNullable)(innerValidator);
+  return validateIf<I, NonNullable<I>, O>(isNonNullable, innerValidator);
 }
 
 export function min(min: number, message: string): Validator<number, number> {
