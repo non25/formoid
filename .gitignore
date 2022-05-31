@@ -1,4 +1,7 @@
 /lib
 /node_modules
 
-yarn-error.log
+yarn-debug.log*
+yarn-error.log*
+
+.DS_Store
