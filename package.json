@@ -29,5 +29,12 @@
   },
   "peerDependencies": {
     "react": "^18.1.0"
-  }
+  },
+  "keywords": [
+    "react",
+    "react-hooks",
+    "form",
+    "validation",
+    "typescript"
+  ]
 }
