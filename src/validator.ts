@@ -165,33 +165,41 @@ export function validateIf<I, O>(predicate: Predicate<I>, innerValidator: Valida
   return (input: I) => (predicate(input) ? innerValidator(input) : success(null));
 }
 
-export function min(min: number, message: string): Validator<number, number> {
-  return fromPredicate((value: number) => value >= min, message);
+export function min<T extends number>(min: number, message: string): Validator<T, T> {
+  return fromPredicate((value: T) => value >= min, message);
 }
 
-export function max(max: number, message: string): Validator<number, number> {
-  return fromPredicate((value: number) => value <= max, message);
+export function max<T extends number>(max: number, message: string): Validator<T, T> {
+  return fromPredicate((value: T) => value <= max, message);
 }
 
-export function range(min: number, max: number, message: string): Validator<number, number> {
-  return fromPredicate((value: number) => value >= min && value <= max, message);
+export function range<T extends number>(
+  min: number,
+  max: number,
+  message: string,
+): Validator<T, T> {
+  return fromPredicate((value: T) => value >= min && value <= max, message);
 }
 
-export function minLength(min: number, message: string): Validator<string, string> {
-  return fromPredicate((value: string) => value.trim().length >= min, message);
+export function minLength<T extends string>(min: number, message: string): Validator<T, T> {
+  return fromPredicate((value: T) => value.trim().length >= min, message);
 }
 
-export function maxLength(max: number, message: string): Validator<string, string> {
-  return fromPredicate((value: string) => value.trim().length <= max, message);
+export function maxLength<T extends string>(max: number, message: string): Validator<T, T> {
+  return fromPredicate((value: T) => value.trim().length <= max, message);
 }
 
-export function lengthRange(min: number, max: number, message: string): Validator<string, string> {
+export function lengthRange<T extends string>(
+  min: number,
+  max: number,
+  message: string,
+): Validator<T, T> {
   return fromPredicate(
-    (value: string) => value.trim().length >= min && value.trim().length <= max,
+    (value: T) => value.trim().length >= min && value.trim().length <= max,
     message,
   );
 }
 
-export function match(pattern: RegExp, message: string): Validator<string, string> {
-  return fromPredicate((value: string) => pattern.test(value), message);
+export function match<T extends string>(pattern: RegExp, message: string): Validator<T, T> {
+  return fromPredicate((value: T) => pattern.test(value), message);
 }
