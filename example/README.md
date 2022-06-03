@@ -1,3 +1,0 @@
-# Formoid example app
-
-Docs coming soon...
