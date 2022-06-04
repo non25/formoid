@@ -3,6 +3,10 @@
  */
 export type NonEmptyArray<A> = [A, ...Array<A>];
 
+export function map<A, B>(ab: (a: A) => B, as: NonEmptyArray<A>): NonEmptyArray<B> {
+  return as.map(ab) as NonEmptyArray<B>;
+}
+
 export function isNonEmpty<A>(as: Array<A>): as is NonEmptyArray<A> {
   return as.length > 0;
 }
