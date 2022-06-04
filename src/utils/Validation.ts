@@ -3,12 +3,7 @@ import { FormErrors } from "./Form";
 import { some, UnknownRecord } from "./Record";
 import { failure, isFailure, Result, success } from "./Result";
 
-export type ValidationError = {
-  id: "ValidationError";
-  message: string;
-};
-
-export type Validator<I, O> = (input: I) => Result<NonEmptyArray<ValidationError>, O>;
+export type Validator<I, O> = (input: I) => Result<NonEmptyArray<string>, O>;
 
 export type ValidationSchema<T extends UnknownRecord> = {
   [K in keyof T]: Validator<T[K], unknown> | null;

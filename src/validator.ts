@@ -1,15 +1,7 @@
 import { isNonEmpty, NonEmptyArray } from "./utils/Array";
 import { Predicate, Refinement } from "./utils/Predicate";
 import { failure, fromPredicate as resultFromPredicate, isFailure, success } from "./utils/Result";
-import { ValidationError, Validator } from "./utils/Validation";
-
-/**
- * Core
- */
-export const validationError = (message: string): ValidationError => ({
-  id: "ValidationError",
-  message,
-});
+import { Validator } from "./utils/Validation";
 
 export function fromPredicate<A, B extends A>(
   predicate: Refinement<A, B>,
@@ -19,13 +11,13 @@ export function fromPredicate<A, B extends A>(
 export function fromPredicate<A>(predicate: Predicate<A>, message: string): Validator<A, A>;
 
 export function fromPredicate<A>(predicate: Predicate<A>, message: string): Validator<A, A> {
-  return resultFromPredicate(predicate, () => [validationError(message)]);
+  return resultFromPredicate(predicate, () => [message]);
 }
 
 /**
  * Sequence
  *
- * Fast-failing validation - returns an `Array<ValidationError>` once some
+ * Fast-failing validation - returns a `NonEmptyArray<string>` once some
  * validation fails
  */
 export function sequence<I, A, O>(a: Validator<I, A>, b: Validator<A, O>): Validator<I, O>;
@@ -117,7 +109,7 @@ export function parallel<I, O>(
   ...validators: NonEmptyArray<Validator<I, O>>
 ): Validator<I, unknown> {
   return (input) => {
-    const failures: Array<ValidationError> = [];
+    const failures: Array<string> = [];
 
     for (const key in validators) {
       const result = validators[key](input);

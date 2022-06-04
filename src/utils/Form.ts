@@ -1,11 +1,11 @@
 import { NonEmptyArray } from "./Array";
 import { UnknownRecord } from "./Record";
 import { isFailure } from "./Result";
-import { ValidationError, ValidationSchema, Validator } from "./Validation";
+import { ValidationSchema, Validator } from "./Validation";
 
 export type FieldState<T> = {
   disabled: boolean;
-  errors: NonEmptyArray<ValidationError> | null;
+  errors: NonEmptyArray<string> | null;
   touched: boolean;
   value: T;
 };
@@ -29,7 +29,7 @@ export type FormErrors<T extends UnknownRecord> = {
 
 export type SetErrors<V extends UnknownRecord> = (
   key: keyof V,
-  errors: NonEmptyArray<ValidationError>,
+  errors: NonEmptyArray<string>,
 ) => void;
 
 export function initializeForm<T extends UnknownRecord>(data: T): FormState<T> {
@@ -80,10 +80,7 @@ export function formStateManager<T extends UnknownRecord>(state: FormState<T>) {
       ...state,
       [key]: { ...state[key], disabled: false },
     }),
-    setErrors: <K extends keyof T>(
-      key: K,
-      errors: NonEmptyArray<ValidationError> | null,
-    ): FormState<T> => ({
+    setErrors: <K extends keyof T>(key: K, errors: NonEmptyArray<string> | null): FormState<T> => ({
       ...state,
       [key]: { ...state[key], errors },
     }),
