@@ -12,7 +12,6 @@ import {
   initializeForm,
   SetErrors,
 } from "./utils/Form";
-import { UnknownRecord } from "./utils/Record";
 import { isFailure, isSuccess } from "./utils/Result";
 import {
   validate,
@@ -23,16 +22,16 @@ import {
 
 type ValidationStrategy = "onChange" | "onBlur" | "onSubmit";
 
-type UseFormConfig<Values extends UnknownRecord, Schema extends ValidationSchema<Values>> = {
+type UseFormConfig<Values, Schema extends ValidationSchema<Values>> = {
   initialValues: Values;
   validationStrategy: ValidationStrategy;
   validators: (values: Values) => Schema;
 };
 
 type UseFormConfigExtended<
-  Values extends UnknownRecord,
+  Values,
   Schema extends ValidationSchema<Values>,
-  FieldArrayValues extends UnknownRecord,
+  FieldArrayValues,
   FieldArraySchema extends ValidationSchema<FieldArrayValues>,
   > = {
     form: {
@@ -48,9 +47,9 @@ type UseFormConfigExtended<
   };
 
 function isExtendedConfig<
-  Values extends UnknownRecord,
+  Values,
   Schema extends ValidationSchema<Values>,
-  FieldArrayValues extends UnknownRecord,
+  FieldArrayValues,
   FieldArraySchema extends ValidationSchema<FieldArrayValues>,
   >(
     config:
@@ -60,11 +59,11 @@ function isExtendedConfig<
   return "fieldArray" in config;
 }
 
-type OnSubmit<Values extends UnknownRecord, Schema extends ValidationSchema<Values>> = {
+type OnSubmit<Values, Schema extends ValidationSchema<Values>> = {
   (data: ValidatedValues<Values, Schema>): Promise<unknown>;
 };
 
-type UseFormReturn<Values extends UnknownRecord, Schema extends ValidationSchema<Values>> = {
+type UseFormReturn<Values, Schema extends ValidationSchema<Values>> = {
   errors: FormErrors<Values>;
   fieldProps: <K extends keyof Values>(key: K) => FieldProps<Values[K]>;
   handleReset: (nextValues?: Values) => void;
@@ -75,9 +74,9 @@ type UseFormReturn<Values extends UnknownRecord, Schema extends ValidationSchema
 };
 
 type OnSubmitExtended<
-  Values extends UnknownRecord,
+  Values,
   Schema extends ValidationSchema<Values>,
-  FieldArrayValues extends UnknownRecord,
+  FieldArrayValues,
   FieldArraySchema extends ValidationSchema<FieldArrayValues>,
   > = {
     (
@@ -87,9 +86,9 @@ type OnSubmitExtended<
   };
 
 type UseFormReturnExtended<
-  Values extends UnknownRecord,
+  Values,
   Schema extends ValidationSchema<Values>,
-  FieldArrayValues extends UnknownRecord,
+  FieldArrayValues,
   FieldArraySchema extends ValidationSchema<FieldArrayValues>,
   > = {
     form: Omit<UseFormReturn<Values, Schema>, "handleSubmit" | "handleReset" | "isSubmitting">;
@@ -108,12 +107,12 @@ type UseFormReturnExtended<
     isSubmitting: boolean;
   };
 
-type State<Values extends UnknownRecord, FieldArrayValues extends UnknownRecord> = {
+type State<Values, FieldArrayValues> = {
   form: FormState<Values>;
   fieldArray: Array<FormState<FieldArrayValues>>;
 };
 
-type Action<Values extends UnknownRecord, FieldArrayValues extends UnknownRecord> =
+type Action<Values, FieldArrayValues> =
   | {
     id: "Form.Blur";
     key: keyof Values;
@@ -187,23 +186,24 @@ type Action<Values extends UnknownRecord, FieldArrayValues extends UnknownRecord
     key: keyof FieldArrayValues;
   };
 
-export function useForm<Values extends UnknownRecord, Schema extends ValidationSchema<Values>>(
-  config: UseFormConfig<Values, Schema>,
-): UseFormReturn<Values, Schema>;
+export function useForm<
+  Values extends Record<string, unknown>,
+  Schema extends ValidationSchema<Values>,
+  >(config: UseFormConfig<Values, Schema>): UseFormReturn<Values, Schema>;
 
 export function useForm<
-  Values extends UnknownRecord,
+  Values extends Record<string, unknown>,
   Schema extends ValidationSchema<Values>,
-  FieldArrayValues extends UnknownRecord,
+  FieldArrayValues extends Record<string, unknown>,
   FieldArraySchema extends ValidationSchema<FieldArrayValues>,
   >(
     config: UseFormConfigExtended<Values, Schema, FieldArrayValues, FieldArraySchema>,
 ): UseFormReturnExtended<Values, Schema, FieldArrayValues, FieldArraySchema>;
 
 export function useForm<
-  Values extends UnknownRecord,
+  Values extends Record<string, unknown>,
   Schema extends ValidationSchema<Values>,
-  FieldArrayValues extends UnknownRecord,
+  FieldArrayValues extends Record<string, unknown>,
   FieldArraySchema extends ValidationSchema<FieldArrayValues>,
   >(
     config:

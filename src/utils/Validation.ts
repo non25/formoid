@@ -1,24 +1,24 @@
 import { append, NonEmptyArray } from "./Array";
 import { FormErrors } from "./Form";
-import { some, UnknownRecord } from "./Record";
+import { some } from "./Record";
 import { failure, isFailure, Result, success } from "./Result";
 
 export type Validator<I, O> = (input: I) => Result<NonEmptyArray<string>, O>;
 
-export type ValidationSchema<T extends UnknownRecord> = {
+export type ValidationSchema<T> = {
   [K in keyof T]: Validator<T[K], unknown> | null;
 };
 
-export type ValidatedValues<T extends UnknownRecord, S extends ValidationSchema<T>> = {
+export type ValidatedValues<T, S extends ValidationSchema<T>> = {
   [K in keyof T]: S[K] extends Validator<T[K], infer O> ? O : T[K];
 };
 
-type ValidationResult<T extends UnknownRecord, S extends ValidationSchema<T>> = Result<
+type ValidationResult<T, S extends ValidationSchema<T>> = Result<
   FormErrors<T>,
   ValidatedValues<T, S>
 >;
 
-export function validate<T extends UnknownRecord, S extends ValidationSchema<T>>(
+export function validate<T, S extends ValidationSchema<T>>(
   values: T,
   schema: S,
 ): ValidationResult<T, S> {
@@ -38,12 +38,12 @@ export function validate<T extends UnknownRecord, S extends ValidationSchema<T>>
   return hasErrors ? failure(errors) : success(values as ValidatedValues<T, S>);
 }
 
-type FieldArrayValidationResult<T extends UnknownRecord, S extends ValidationSchema<T>> = Result<
+type FieldArrayValidationResult<T, S extends ValidationSchema<T>> = Result<
   Array<FormErrors<T> | null>,
   Array<ValidatedValues<T, S>>
 >;
 
-export function validateFieldArray<T extends UnknownRecord, S extends ValidationSchema<T>>(
+export function validateFieldArray<T, S extends ValidationSchema<T>>(
   values: T[],
   schema: S,
 ): FieldArrayValidationResult<T, S> {

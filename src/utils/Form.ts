@@ -1,5 +1,4 @@
 import { NonEmptyArray } from "./Array";
-import { UnknownRecord } from "./Record";
 import { isFailure } from "./Result";
 import { ValidationSchema, Validator } from "./Validation";
 
@@ -15,24 +14,21 @@ export type FieldProps<T> = FieldState<T> & {
   onChange: (value: T) => void;
 };
 
-export type FormState<T extends UnknownRecord> = {
+export type FormState<T> = {
   [K in keyof T]: FieldState<T[K]>;
 };
 
-export type FieldGroup<T extends UnknownRecord> = {
+export type FieldGroup<T> = {
   [K in keyof T]: FieldProps<T[K]>;
 };
 
-export type FormErrors<T extends UnknownRecord> = {
+export type FormErrors<T> = {
   [K in keyof T]: FieldState<T>["errors"];
 };
 
-export type SetErrors<V extends UnknownRecord> = (
-  key: keyof V,
-  errors: NonEmptyArray<string>,
-) => void;
+export type SetErrors<T> = (key: keyof T, errors: NonEmptyArray<string>) => void;
 
-export function initializeForm<T extends UnknownRecord>(data: T): FormState<T> {
+export function initializeForm<T>(data: T): FormState<T> {
   const result = {} as FormState<T>;
 
   for (const key in data) {
@@ -42,7 +38,7 @@ export function initializeForm<T extends UnknownRecord>(data: T): FormState<T> {
   return result;
 }
 
-export function getValues<T extends UnknownRecord>(formState: FormState<T>): T {
+export function getValues<T>(formState: FormState<T>): T {
   const result = {} as T;
 
   for (const key in formState) {
@@ -52,7 +48,7 @@ export function getValues<T extends UnknownRecord>(formState: FormState<T>): T {
   return result;
 }
 
-export function getErrors<T extends UnknownRecord>(formState: FormState<T>): FormErrors<T> {
+export function getErrors<T>(formState: FormState<T>): FormErrors<T> {
   const result = {} as FormErrors<T>;
 
   for (const key in formState) {
@@ -62,7 +58,7 @@ export function getErrors<T extends UnknownRecord>(formState: FormState<T>): For
   return result;
 }
 
-export function formStateManager<T extends UnknownRecord>(state: FormState<T>) {
+export function formStateManager<T>(state: FormState<T>) {
   return {
     blur: <K extends keyof T>(key: K): FormState<T> => ({
       ...state,
