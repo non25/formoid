@@ -33,28 +33,28 @@ type UseFormConfigExtended<
   Schema extends ValidationSchema<Values>,
   FieldArrayValues,
   FieldArraySchema extends ValidationSchema<FieldArrayValues>,
-  > = {
-    form: {
-      initialValues: Values;
-      validators: (formValues: Values, fieldArrayValues: Array<FieldArrayValues>) => Schema;
-    };
-    fieldArray: {
-      defaultValues: FieldArrayValues;
-      initialValues: Array<FieldArrayValues>;
-      validators: (fieldArrayValues: Array<FieldArrayValues>, formValues: Values) => FieldArraySchema;
-    };
-    validationStrategy: ValidationStrategy;
+> = {
+  form: {
+    initialValues: Values;
+    validators: (formValues: Values, fieldArrayValues: Array<FieldArrayValues>) => Schema;
   };
+  fieldArray: {
+    defaultValues: FieldArrayValues;
+    initialValues: Array<FieldArrayValues>;
+    validators: (fieldArrayValues: Array<FieldArrayValues>, formValues: Values) => FieldArraySchema;
+  };
+  validationStrategy: ValidationStrategy;
+};
 
 function isExtendedConfig<
   Values,
   Schema extends ValidationSchema<Values>,
   FieldArrayValues,
   FieldArraySchema extends ValidationSchema<FieldArrayValues>,
-  >(
-    config:
-      | UseFormConfig<Values, Schema>
-      | UseFormConfigExtended<Values, Schema, FieldArrayValues, FieldArraySchema>,
+>(
+  config:
+    | UseFormConfig<Values, Schema>
+    | UseFormConfigExtended<Values, Schema, FieldArrayValues, FieldArraySchema>,
 ): config is UseFormConfigExtended<Values, Schema, FieldArrayValues, FieldArraySchema> {
   return "fieldArray" in config;
 }
@@ -78,34 +78,34 @@ type OnSubmitExtended<
   Schema extends ValidationSchema<Values>,
   FieldArrayValues,
   FieldArraySchema extends ValidationSchema<FieldArrayValues>,
-  > = {
-    (
-      formValues: ValidatedValues<Values, Schema>,
-      fieldArrayValues: Array<ValidatedValues<FieldArrayValues, FieldArraySchema>>,
-    ): Promise<unknown>;
-  };
+> = {
+  (
+    formValues: ValidatedValues<Values, Schema>,
+    fieldArrayValues: Array<ValidatedValues<FieldArrayValues, FieldArraySchema>>,
+  ): Promise<unknown>;
+};
 
 type UseFormReturnExtended<
   Values,
   Schema extends ValidationSchema<Values>,
   FieldArrayValues,
   FieldArraySchema extends ValidationSchema<FieldArrayValues>,
-  > = {
-    form: Omit<UseFormReturn<Values, Schema>, "handleSubmit" | "handleReset" | "isSubmitting">;
-    fieldArray: {
-      append: () => void;
-      errors: Array<FormErrors<FieldArrayValues>>;
-      groups: Array<FieldGroup<FieldArrayValues>>;
-      remove: (index: number) => void;
-      setErrors: (index: number, key: keyof FieldArrayValues, errors: NonEmptyArray<string>) => void;
-      values: Array<FieldArrayValues>;
-    };
-    handleReset: (nextValues?: Values) => void;
-    handleSubmit: (
-      onSubmit: OnSubmitExtended<Values, Schema, FieldArrayValues, FieldArraySchema>,
-    ) => void;
-    isSubmitting: boolean;
+> = {
+  form: Omit<UseFormReturn<Values, Schema>, "handleSubmit" | "handleReset" | "isSubmitting">;
+  fieldArray: {
+    append: () => void;
+    errors: Array<FormErrors<FieldArrayValues>>;
+    groups: Array<FieldGroup<FieldArrayValues>>;
+    remove: (index: number) => void;
+    setErrors: (index: number, key: keyof FieldArrayValues, errors: NonEmptyArray<string>) => void;
+    values: Array<FieldArrayValues>;
   };
+  handleReset: (nextValues?: Values) => void;
+  handleSubmit: (
+    onSubmit: OnSubmitExtended<Values, Schema, FieldArrayValues, FieldArraySchema>,
+  ) => void;
+  isSubmitting: boolean;
+};
 
 type State<Values, FieldArrayValues> = {
   form: FormState<Values>;
@@ -114,90 +114,90 @@ type State<Values, FieldArrayValues> = {
 
 type Action<Values, FieldArrayValues> =
   | {
-    id: "Form.Blur";
-    key: keyof Values;
-  }
+      id: "Form.Blur";
+      key: keyof Values;
+    }
   | {
-    id: "Form.Change";
-    key: keyof Values;
-    value: Values[keyof Values];
-  }
+      id: "Form.Change";
+      key: keyof Values;
+      value: Values[keyof Values];
+    }
   | {
-    id: "Form.Disable";
-    key: keyof Values;
-  }
+      id: "Form.Disable";
+      key: keyof Values;
+    }
   | {
-    id: "Form.Enable";
-    key: keyof Values;
-  }
+      id: "Form.Enable";
+      key: keyof Values;
+    }
   | {
-    id: "Form.Reset";
-    nextValues?: Values;
-  }
+      id: "Form.Reset";
+      nextValues?: Values;
+    }
   | {
-    id: "Form.SetErrors";
-    key: keyof Values;
-    errors: NonEmptyArray<string> | null;
-  }
+      id: "Form.SetErrors";
+      key: keyof Values;
+      errors: NonEmptyArray<string> | null;
+    }
   | {
-    id: "Form.Validate";
-    key: keyof Values;
-  }
+      id: "Form.Validate";
+      key: keyof Values;
+    }
   | {
-    id: "FieldArray.Append";
-  }
+      id: "FieldArray.Append";
+    }
   | {
-    id: "FieldArray.Blur";
-    index: number;
-    key: keyof FieldArrayValues;
-  }
+      id: "FieldArray.Blur";
+      index: number;
+      key: keyof FieldArrayValues;
+    }
   | {
-    id: "FieldArray.Change";
-    index: number;
-    key: keyof FieldArrayValues;
-    value: FieldArrayValues[keyof FieldArrayValues];
-  }
+      id: "FieldArray.Change";
+      index: number;
+      key: keyof FieldArrayValues;
+      value: FieldArrayValues[keyof FieldArrayValues];
+    }
   | {
-    id: "FieldArray.Disable";
-    index: number;
-    key: keyof FieldArrayValues;
-  }
+      id: "FieldArray.Disable";
+      index: number;
+      key: keyof FieldArrayValues;
+    }
   | {
-    id: "FieldArray.Enable";
-    index: number;
-    key: keyof FieldArrayValues;
-  }
+      id: "FieldArray.Enable";
+      index: number;
+      key: keyof FieldArrayValues;
+    }
   | {
-    id: "FieldArray.SetErrors";
-    index: number;
-    key: keyof FieldArrayValues;
-    errors: NonEmptyArray<string> | null;
-  }
+      id: "FieldArray.SetErrors";
+      index: number;
+      key: keyof FieldArrayValues;
+      errors: NonEmptyArray<string> | null;
+    }
   | {
-    id: "FieldArray.Remove";
-    index: number;
-  }
+      id: "FieldArray.Remove";
+      index: number;
+    }
   | {
-    id: "FieldArray.Reset";
-  }
+      id: "FieldArray.Reset";
+    }
   | {
-    id: "FieldArray.Validate";
-    index: number;
-    key: keyof FieldArrayValues;
-  };
+      id: "FieldArray.Validate";
+      index: number;
+      key: keyof FieldArrayValues;
+    };
 
 export function useForm<
   Values extends Record<string, unknown>,
   Schema extends ValidationSchema<Values>,
-  >(config: UseFormConfig<Values, Schema>): UseFormReturn<Values, Schema>;
+>(config: UseFormConfig<Values, Schema>): UseFormReturn<Values, Schema>;
 
 export function useForm<
   Values extends Record<string, unknown>,
   Schema extends ValidationSchema<Values>,
   FieldArrayValues extends Record<string, unknown>,
   FieldArraySchema extends ValidationSchema<FieldArrayValues>,
-  >(
-    config: UseFormConfigExtended<Values, Schema, FieldArrayValues, FieldArraySchema>,
+>(
+  config: UseFormConfigExtended<Values, Schema, FieldArrayValues, FieldArraySchema>,
 ): UseFormReturnExtended<Values, Schema, FieldArrayValues, FieldArraySchema>;
 
 export function useForm<
@@ -205,10 +205,10 @@ export function useForm<
   Schema extends ValidationSchema<Values>,
   FieldArrayValues extends Record<string, unknown>,
   FieldArraySchema extends ValidationSchema<FieldArrayValues>,
-  >(
-    config:
-      | UseFormConfig<Values, Schema>
-      | UseFormConfigExtended<Values, Schema, FieldArrayValues, FieldArraySchema>,
+>(
+  config:
+    | UseFormConfig<Values, Schema>
+    | UseFormConfigExtended<Values, Schema, FieldArrayValues, FieldArraySchema>,
 ) {
   const initialFormState = useMemo(
     () =>
