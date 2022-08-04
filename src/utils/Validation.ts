@@ -51,21 +51,21 @@ export function validateFieldArray<T, S extends ValidationSchema<T>>(
     errors: [] as Array<FormErrors<T> | null>,
     values: [] as Array<ValidatedValues<T, S>>,
   };
-  const result = values
-    .map((groupValues) => validate(groupValues, schema))
-    .reduce((result, groupValidationResult) => {
-      if (isFailure(groupValidationResult)) {
-        return {
-          ...result,
-          errors: append(groupValidationResult.failure, result.errors),
-        };
-      }
+  const result = values.reduce((result, groupValues) => {
+    const groupValidationResult = validate(groupValues, schema);
 
+    if (isFailure(groupValidationResult)) {
       return {
-        errors: append(null, result.errors),
-        values: append(groupValidationResult.success, result.values),
+        ...result,
+        errors: append(groupValidationResult.failure, result.errors),
       };
-    }, initial);
+    }
+
+    return {
+      errors: append(null, result.errors),
+      values: append(groupValidationResult.success, result.values),
+    };
+  }, initial);
 
   const hasErrors = result.errors.some((groupErrors) => groupErrors !== null);
 
