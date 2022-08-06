@@ -14,6 +14,7 @@
     "format": "prettier --write ./src",
     "format-build": "prettier --write --config .prettierrc ./lib/**/*.ts",
     "lint": "eslint ./src",
+    "postinstall": "yarn link && cd example && yarn && yarn link formoid",
     "prepublish": "yarn format && yarn lint && yarn build && yarn format-build",
     "watch": "tsc --watch"
   },
