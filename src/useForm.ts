@@ -64,14 +64,21 @@ type OnSubmit<Values, Schema extends ValidationSchema<Values>> = {
   (data: ValidatedValues<Values, Schema>): Promise<unknown>;
 };
 
+type Update<Values> = (values: Values) => Values;
+
+type UpdateExtended<Values, FieldArrayValues> = {
+  form: Update<Values>;
+  fieldArray: Update<Array<FieldArrayValues>>;
+};
+
 type UseFormReturn<Values, Schema extends ValidationSchema<Values>> = {
   errors: FormErrors<Values>;
   fieldProps: <K extends keyof Values>(key: K) => FieldProps<Values[K]>;
-  handleReset: (nextValues?: Values) => void;
+  handleReset: (update?: Update<Values>) => void;
   handleSubmit: (onSubmit: OnSubmit<Values, Schema>) => void;
   isSubmitting: boolean;
   setErrors: SetErrors<Values>;
-  setValues: (update: (values: Values) => Values) => void;
+  setValues: (update: Update<Values>) => void;
   values: Values;
 };
 
@@ -80,12 +87,10 @@ type OnSubmitExtended<
   Schema extends ValidationSchema<Values>,
   FieldArrayValues,
   FieldArraySchema extends ValidationSchema<FieldArrayValues>,
-> = {
-  (
-    formValues: ValidatedValues<Values, Schema>,
-    fieldArrayValues: Array<ValidatedValues<FieldArrayValues, FieldArraySchema>>,
-  ): Promise<unknown>;
-};
+> = (
+  formValues: ValidatedValues<Values, Schema>,
+  fieldArrayValues: Array<ValidatedValues<FieldArrayValues, FieldArraySchema>>,
+) => Promise<unknown>;
 
 type UseFormReturnExtended<
   Values,
@@ -100,10 +105,10 @@ type UseFormReturnExtended<
     groups: Array<FieldGroup<FieldArrayValues>>;
     remove: (index: number) => void;
     setErrors: (index: number, key: keyof FieldArrayValues, errors: NonEmptyArray<string>) => void;
-    setValues: (index: number, update: (values: FieldArrayValues) => FieldArrayValues) => void;
+    setValues: (index: number, update: Update<FieldArrayValues>) => void;
     values: Array<FieldArrayValues>;
   };
-  handleReset: (nextValues?: Values) => void;
+  handleReset: (update?: Partial<UpdateExtended<Values, FieldArrayValues>>) => void;
   handleSubmit: (
     onSubmit: OnSubmitExtended<Values, Schema, FieldArrayValues, FieldArraySchema>,
   ) => void;
@@ -135,7 +140,7 @@ type Action<Values, FieldArrayValues> =
     }
   | {
       id: "Form.Reset";
-      nextValues?: Values;
+      update?: Update<Values>;
     }
   | {
       id: "Form.SetErrors";
@@ -144,7 +149,7 @@ type Action<Values, FieldArrayValues> =
     }
   | {
       id: "Form.SetValues";
-      update: (values: Values) => Values;
+      update: Update<Values>;
     }
   | {
       id: "Form.Validate";
@@ -183,7 +188,7 @@ type Action<Values, FieldArrayValues> =
   | {
       id: "FieldArray.SetValues";
       index: number;
-      update: (values: FieldArrayValues) => FieldArrayValues;
+      update: Update<FieldArrayValues>;
     }
   | {
       id: "FieldArray.Remove";
@@ -191,6 +196,7 @@ type Action<Values, FieldArrayValues> =
     }
   | {
       id: "FieldArray.Reset";
+      update?: Update<Array<FieldArrayValues>>;
     }
   | {
       id: "FieldArray.Validate";
@@ -231,16 +237,13 @@ export function useForm<
     () => (isExtendedConfig(config) ? initializeForm(config.fieldArray.defaultValues) : null),
     [config],
   );
+  const initialFieldArrayState = useMemo(() => {
+    if (isExtendedConfig(config)) {
+      return config.fieldArray.initialValues.map(initializeForm);
+    }
 
-  const initialState: State<Values, FieldArrayValues> = useMemo(
-    () => ({
-      form: initialFormState,
-      fieldArray: isExtendedConfig(config)
-        ? config.fieldArray.initialValues.map(initializeForm)
-        : [],
-    }),
-    [initialFormState, config],
-  );
+    return [];
+  }, [config]);
 
   const reducer: Reducer<State<Values, FieldArrayValues>, Action<Values, FieldArrayValues>> = (
     state,
@@ -310,7 +313,9 @@ export function useForm<
       case "Form.Reset":
         return {
           ...state,
-          form: action.nextValues ? initializeForm(action.nextValues) : initialFormState,
+          form: action.update
+            ? initializeForm(action.update(getValues(state.form)))
+            : initialFormState,
         };
 
       case "FieldArray.Append":
@@ -404,12 +409,17 @@ export function useForm<
       case "FieldArray.Reset":
         return {
           ...state,
-          fieldArray: initialState.fieldArray,
+          fieldArray: action.update
+            ? action.update(state.fieldArray.map(getValues)).map(initializeForm)
+            : initialFieldArrayState,
         };
     }
   };
 
-  const [state, dispatch] = useReducer(reducer, initialState);
+  const [state, dispatch] = useReducer(reducer, {
+    form: initialFormState,
+    fieldArray: initialFieldArrayState,
+  });
 
   const formValues = useMemo(() => getValues(state.form), [state.form]);
 
@@ -602,11 +612,14 @@ export function useForm<
     }
   };
 
-  const handleReset = (nextValues?: Values): void => {
-    dispatch({ id: "Form.Reset", nextValues });
+  const handleReset = (update?: Update<Values>): void => {
+    dispatch({ id: "Form.Reset", update });
+  };
 
+  const handleResetExtended = (update?: Partial<UpdateExtended<Values, FieldArrayValues>>) => {
     if (isExtendedConfig(config)) {
-      dispatch({ id: "FieldArray.Reset" });
+      dispatch({ id: "Form.Reset", update: update?.form });
+      dispatch({ id: "FieldArray.Reset", update: update?.fieldArray });
     }
   };
 
@@ -628,7 +641,7 @@ export function useForm<
         setValues: setFieldArrayValues,
         values: fieldArrayValues,
       },
-      handleReset,
+      handleReset: handleResetExtended,
       handleSubmit: handleSubmitExtended,
       isSubmitting,
     };
