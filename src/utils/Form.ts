@@ -48,6 +48,16 @@ export function getValues<T>(formState: FormState<T>): T {
   return result;
 }
 
+export function updateValues<T>(formState: FormState<T>, values: T): FormState<T> {
+  const result = {} as FormState<T>;
+
+  for (const key in formState) {
+    result[key] = { ...formState[key], value: values[key] };
+  }
+
+  return result;
+}
+
 export function getErrors<T>(formState: FormState<T>): FormErrors<T> {
   const result = {} as FormErrors<T>;
 

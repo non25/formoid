@@ -1,4 +1,4 @@
-import { Reducer, useMemo, useReducer, useState } from "react";
+import { Reducer, useCallback, useMemo, useReducer, useState } from "react";
 import { append, deleteAt, modifyAt, NonEmptyArray } from "./utils/Array";
 import {
   FieldGroup,
@@ -11,6 +11,7 @@ import {
   getValues,
   initializeForm,
   SetErrors,
+  updateValues,
 } from "./utils/Form";
 import { isFailure, isSuccess } from "./utils/Result";
 import {
@@ -70,6 +71,7 @@ type UseFormReturn<Values, Schema extends ValidationSchema<Values>> = {
   handleSubmit: (onSubmit: OnSubmit<Values, Schema>) => void;
   isSubmitting: boolean;
   setErrors: SetErrors<Values>;
+  setValues: (update: (values: Values) => Values) => void;
   values: Values;
 };
 
@@ -98,6 +100,7 @@ type UseFormReturnExtended<
     groups: Array<FieldGroup<FieldArrayValues>>;
     remove: (index: number) => void;
     setErrors: (index: number, key: keyof FieldArrayValues, errors: NonEmptyArray<string>) => void;
+    setValues: (index: number, update: (values: FieldArrayValues) => FieldArrayValues) => void;
     values: Array<FieldArrayValues>;
   };
   handleReset: (nextValues?: Values) => void;
@@ -140,6 +143,10 @@ type Action<Values, FieldArrayValues> =
       errors: NonEmptyArray<string> | null;
     }
   | {
+      id: "Form.SetValues";
+      update: (values: Values) => Values;
+    }
+  | {
       id: "Form.Validate";
       key: keyof Values;
     }
@@ -172,6 +179,11 @@ type Action<Values, FieldArrayValues> =
       index: number;
       key: keyof FieldArrayValues;
       errors: NonEmptyArray<string> | null;
+    }
+  | {
+      id: "FieldArray.SetValues";
+      index: number;
+      update: (values: FieldArrayValues) => FieldArrayValues;
     }
   | {
       id: "FieldArray.Remove";
@@ -274,6 +286,12 @@ export function useForm<
           form: formManager.setErrors(action.key, action.errors),
         };
 
+      case "Form.SetValues":
+        return {
+          ...state,
+          form: updateValues(state.form, action.update(getValues(state.form))),
+        };
+
       case "Form.Validate": {
         const getSchema = () => {
           if (isExtendedConfig(config)) {
@@ -342,6 +360,14 @@ export function useForm<
           ...state,
           fieldArray: modifyFieldArray(action.index, (group) =>
             formStateManager(group).setErrors(action.key, action.errors),
+          ),
+        };
+
+      case "FieldArray.SetValues":
+        return {
+          ...state,
+          fieldArray: modifyFieldArray(action.index, (group) =>
+            updateValues(group, action.update(getValues(group))),
           ),
         };
 
@@ -490,6 +516,10 @@ export function useForm<
     dispatch({ id: "Form.SetErrors", key, errors });
   };
 
+  const setValues = useCallback((update: (values: Values) => Values): void => {
+    dispatch({ id: "Form.SetValues", update });
+  }, []);
+
   const propagateFormErrors = (formErrors: FormErrors<Values>): void => {
     for (const key in formErrors) {
       dispatch({ id: "Form.SetErrors", key, errors: formErrors[key] });
@@ -501,6 +531,13 @@ export function useForm<
     key: keyof FieldArrayValues,
     errors: NonEmptyArray<string>,
   ): void => dispatch({ id: "FieldArray.SetErrors", index, key, errors });
+
+  const setFieldArrayValues = useCallback(
+    (index: number, update: (values: FieldArrayValues) => FieldArrayValues) => {
+      dispatch({ id: "FieldArray.SetValues", index, update });
+    },
+    [],
+  );
 
   const propagateFieldArrayErrors = (
     fieldArrayErrors: Array<FormErrors<FieldArrayValues> | null>,
@@ -579,6 +616,7 @@ export function useForm<
         errors: formErrors,
         fieldProps,
         setErrors,
+        setValues,
         values: formValues,
       },
       fieldArray: {
@@ -587,6 +625,7 @@ export function useForm<
         groups: fieldGroups,
         remove: removeFieldGroup,
         setErrors: setFieldArrayErrors,
+        setValues: setFieldArrayValues,
         values: fieldArrayValues,
       },
       handleReset,
@@ -602,6 +641,7 @@ export function useForm<
     handleSubmit,
     isSubmitting,
     setErrors,
+    setValues,
     values: formValues,
   };
 }
