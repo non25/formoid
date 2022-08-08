@@ -243,6 +243,13 @@ export function useForm<
     return [];
   }, [config]);
 
+  const initialState = useMemo(() => {
+    return {
+      form: initialFormState,
+      fieldArray: initialFieldArrayState,
+    };
+  }, [initialFieldArrayState, initialFormState]);
+
   const reducer: Reducer<State<Values, FieldArrayValues>, Action<Values, FieldArrayValues>> = (
     state,
     action,
@@ -317,9 +324,7 @@ export function useForm<
             case "regular":
               return {
                 ...state,
-                form: action.update
-                  ? initializeForm(action.update.handler(formValues))
-                  : initialFormState,
+                form: initializeForm(action.update.handler(formValues)),
               };
 
             case "extended": {
@@ -336,7 +341,7 @@ export function useForm<
           }
         }
 
-        return state;
+        return initialState;
 
       case "FieldArray.Append":
         if (initialFieldGroupState) {
@@ -425,10 +430,7 @@ export function useForm<
     }
   };
 
-  const [state, dispatch] = useReducer(reducer, {
-    form: initialFormState,
-    fieldArray: initialFieldArrayState,
-  });
+  const [state, dispatch] = useReducer(reducer, initialState);
 
   const formValues = useMemo(() => getValues(state.form), [state.form]);
 
