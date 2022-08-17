@@ -11,6 +11,7 @@ import {
   getValues,
   initializeForm,
   SetErrors,
+  Update,
   updateValues,
 } from "./utils/Form";
 import { isFailure, isSuccess } from "./utils/Result";
@@ -63,8 +64,6 @@ function isExtendedConfig<
 type OnSubmit<Values, Schema extends ValidationSchema<Values>> = {
   (data: ValidatedValues<Values, Schema>): Promise<unknown>;
 };
-
-type Update<Values> = (values: Values) => Values;
 
 type UseFormReturn<Values, Schema extends ValidationSchema<Values>> = {
   errors: FormErrors<Values>;

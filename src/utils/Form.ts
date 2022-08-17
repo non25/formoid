@@ -28,6 +28,8 @@ export type FormErrors<T> = {
 
 export type SetErrors<T> = (key: keyof T, errors: NonEmptyArray<string>) => void;
 
+export type Update<Values> = (values: Values) => Values;
+
 export function initializeForm<T>(data: T): FormState<T> {
   const result = {} as FormState<T>;
 
