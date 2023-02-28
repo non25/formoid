@@ -11,6 +11,7 @@ import {
   getValues,
   initializeForm,
   SetErrors,
+  SetFieldArrayErrors,
   Update,
   updateValues,
 } from "./utils/Form";
@@ -103,7 +104,7 @@ type UseFormReturnExtended<
     errors: Array<FormErrors<FieldArrayValues>>;
     groups: Array<FieldGroup<FieldArrayValues>>;
     remove: (index: number) => void;
-    setErrors: (index: number, key: keyof FieldArrayValues, errors: NonEmptyArray<string>) => void;
+    setErrors: SetFieldArrayErrors<FieldArrayValues>;
     setValues: (index: number, update: Update<FieldArrayValues>) => void;
     values: Array<FieldArrayValues>;
   };
@@ -543,7 +544,7 @@ export function useForm<
     }
   }, [config, fieldArrayValues, formValues]);
 
-  const setErrors = useCallback((key: keyof Values, errors: NonEmptyArray<string>): void => {
+  const setErrors: SetErrors<Values> = useCallback((key, errors): void => {
     dispatch({ id: "Form.SetErrors", key, errors });
   }, []);
 
@@ -557,8 +558,8 @@ export function useForm<
     }
   }, []);
 
-  const setFieldArrayErrors = useCallback(
-    (index: number, key: keyof FieldArrayValues, errors: NonEmptyArray<string>): void => {
+  const setFieldArrayErrors: SetFieldArrayErrors<FieldArrayValues> = useCallback(
+    (index, key, errors): void => {
       dispatch({ id: "FieldArray.SetErrors", index, key, errors });
     },
     [],

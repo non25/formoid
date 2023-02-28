@@ -26,7 +26,13 @@ export type FormErrors<T> = {
   [K in keyof T]: FieldState<T>["errors"];
 };
 
-export type SetErrors<T> = (key: keyof T, errors: NonEmptyArray<string>) => void;
+export type SetErrors<T> = (key: keyof T, errors: NonEmptyArray<string> | null) => void;
+
+export type SetFieldArrayErrors<T> = (
+  index: number,
+  key: keyof T,
+  errors: NonEmptyArray<string> | null,
+) => void;
 
 export type Update<Values> = (values: Values) => Values;
 
