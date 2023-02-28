@@ -11,10 +11,9 @@
   "license": "MIT",
   "scripts": {
     "build": "rimraf lib && tsc",
-    "format": "prettier --write ./src",
     "format-build": "prettier --write --config .prettierrc ./lib/**/*.ts",
     "lint": "eslint --fix './src/*.ts*'",
-    "prepublish": "yarn format && yarn lint && yarn build && yarn format-build",
+    "prepublish": "yarn lint && yarn build && yarn format-build",
     "watch": "tsc --watch"
   },
   "devDependencies": {
