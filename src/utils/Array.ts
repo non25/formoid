@@ -1,7 +1,9 @@
 /**
  * NonEmptyArray
  */
-export type NonEmptyArray<A> = [A, ...Array<A>];
+export interface NonEmptyArray<A> extends Array<A> {
+  0: A;
+}
 
 export function map<A, B>(ab: (a: A) => B, as: NonEmptyArray<A>): NonEmptyArray<B> {
   return as.map(ab) as NonEmptyArray<B>;
