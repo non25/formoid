@@ -66,11 +66,21 @@ type OnSubmit<Values, Schema extends ValidationSchema<Values>> = {
   (data: ValidatedValues<Values, Schema>): Promise<unknown>;
 };
 
+type OnSubmitMatch<Values, Schema extends ValidationSchema<Values>> = {
+  onSuccess: OnSubmit<Values, Schema>;
+  onFailure: () => unknown;
+};
+
+type HandleSubmit<Values, Schema extends ValidationSchema<Values>> = {
+  (onSubmit: OnSubmit<Values, Schema>): void;
+  (onSubmit: OnSubmitMatch<Values, Schema>): void;
+};
+
 type UseFormReturn<Values, Schema extends ValidationSchema<Values>> = {
   errors: FormErrors<Values>;
   fieldProps: <K extends keyof Values>(key: K) => FieldProps<Values[K]>;
   handleReset: (update?: Update<Values>) => void;
-  handleSubmit: (onSubmit: OnSubmit<Values, Schema>) => void;
+  handleSubmit: HandleSubmit<Values, Schema>;
   isSubmitting: boolean;
   setErrors: SetErrors<Values>;
   setValues: (update: Update<Values>) => void;
@@ -86,6 +96,26 @@ type OnSubmitExtended<
   formValues: ValidatedValues<Values, Schema>,
   fieldArrayValues: Array<ValidatedValues<FieldArrayValues, FieldArraySchema>>,
 ) => Promise<unknown>;
+
+type OnSubmitExtendedMatch<
+  Values,
+  Schema extends ValidationSchema<Values>,
+  FieldArrayValues,
+  FieldArraySchema extends ValidationSchema<FieldArrayValues>,
+> = {
+  onSuccess: OnSubmitExtended<Values, Schema, FieldArrayValues, FieldArraySchema>;
+  onFailure: () => unknown;
+};
+
+type HandleSubmitExtended<
+  Values,
+  Schema extends ValidationSchema<Values>,
+  FieldArrayValues,
+  FieldArraySchema extends ValidationSchema<FieldArrayValues>,
+> = {
+  (onSubmit: OnSubmitExtended<Values, Schema, FieldArrayValues, FieldArraySchema>): void;
+  (onSubmit: OnSubmitExtendedMatch<Values, Schema, FieldArrayValues, FieldArraySchema>): void;
+};
 
 type UpdateExtended<Values, FieldArrayValues> = Update<{
   form: Values;
@@ -109,9 +139,7 @@ type UseFormReturnExtended<
     values: Array<FieldArrayValues>;
   };
   handleReset: (update?: UpdateExtended<Values, FieldArrayValues>) => void;
-  handleSubmit: (
-    onSubmit: OnSubmitExtended<Values, Schema, FieldArrayValues, FieldArraySchema>,
-  ) => void;
+  handleSubmit: HandleSubmitExtended<Values, Schema, FieldArrayValues, FieldArraySchema>;
   isSubmitting: boolean;
 };
 
@@ -589,37 +617,63 @@ export function useForm<
     [fieldArrayValues],
   );
 
-  const handleSubmit = useCallback(
-    (onSubmit: OnSubmit<Values, Schema>): void => {
-      if (isExtendedConfig(config)) {
-        return;
-      }
+  function handleSubmit(onSubmit: OnSubmit<Values, Schema>): void;
 
-      const formValidationResult = validate(formValues, config.validators(formValues));
+  function handleSubmit(onSubmit: OnSubmitMatch<Values, Schema>): void;
 
-      if (isFailure(formValidationResult)) {
-        propagateFormErrors(formValidationResult.failure);
-      } else {
+  function handleSubmit(onSubmit: OnSubmit<Values, Schema> | OnSubmitMatch<Values, Schema>): void {
+    if (isExtendedConfig(config)) {
+      return;
+    }
+
+    const formValidationResult = validate(formValues, config.validators(formValues));
+
+    if (isFailure(formValidationResult)) {
+      propagateFormErrors(formValidationResult.failure);
+
+      if (onSubmit instanceof Function) return;
+
+      onSubmit.onFailure();
+    } else {
+      disableForm();
+
+      (onSubmit instanceof Function ? onSubmit : onSubmit.onSuccess)(
+        formValidationResult.success,
+      ).finally(enableForm);
+    }
+  }
+
+  function handleSubmitExtended(
+    onSubmit: OnSubmitExtended<Values, Schema, FieldArrayValues, FieldArraySchema>,
+  ): void;
+
+  function handleSubmitExtended(
+    onSubmit: OnSubmitExtendedMatch<Values, Schema, FieldArrayValues, FieldArraySchema>,
+  ): void;
+
+  function handleSubmitExtended(
+    onSubmit:
+      | OnSubmitExtended<Values, Schema, FieldArrayValues, FieldArraySchema>
+      | OnSubmitExtendedMatch<Values, Schema, FieldArrayValues, FieldArraySchema>,
+  ): void {
+    if (isExtendedConfig(config)) {
+      const formValidationResult = validate(
+        formValues,
+        config.form.validators(formValues, fieldArrayValues),
+      );
+      const fieldArrayValidationResult = validateFieldArray(
+        fieldArrayValues,
+        config.fieldArray.validators(fieldArrayValues, formValues),
+      );
+
+      if (isSuccess(formValidationResult) && isSuccess(fieldArrayValidationResult)) {
         disableForm();
 
-        onSubmit(formValidationResult.success).finally(enableForm);
-      }
-    },
-    [config, disableForm, enableForm, formValues, propagateFormErrors],
-  );
-
-  const handleSubmitExtended = useCallback(
-    (onSubmit: OnSubmitExtended<Values, Schema, FieldArrayValues, FieldArraySchema>): void => {
-      if (isExtendedConfig(config)) {
-        const formValidationResult = validate(
-          formValues,
-          config.form.validators(formValues, fieldArrayValues),
-        );
-        const fieldArrayValidationResult = validateFieldArray(
-          fieldArrayValues,
-          config.fieldArray.validators(fieldArrayValues, formValues),
-        );
-
+        (onSubmit instanceof Function ? onSubmit : onSubmit.onSuccess)(
+          formValidationResult.success,
+          fieldArrayValidationResult.success,
+        ).finally(enableForm);
+      } else {
         if (isFailure(formValidationResult)) {
           propagateFormErrors(formValidationResult.failure);
         }
@@ -628,25 +682,12 @@ export function useForm<
           propagateFieldArrayErrors(fieldArrayValidationResult.failure);
         }
 
-        if (isSuccess(formValidationResult) && isSuccess(fieldArrayValidationResult)) {
-          disableForm();
+        if (onSubmit instanceof Function) return;
 
-          onSubmit(formValidationResult.success, fieldArrayValidationResult.success).finally(
-            enableForm,
-          );
-        }
+        onSubmit.onFailure();
       }
-    },
-    [
-      config,
-      disableForm,
-      enableForm,
-      fieldArrayValues,
-      formValues,
-      propagateFieldArrayErrors,
-      propagateFormErrors,
-    ],
-  );
+    }
+  }
 
   const handleReset = useCallback((update?: Update<Values>): void => {
     dispatch({
