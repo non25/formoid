@@ -1,6 +1,12 @@
 import { isNonEmpty, NonEmptyArray } from "./utils/Array";
 import { Predicate, Refinement } from "./utils/Predicate";
-import { failure, fromPredicate as resultFromPredicate, isFailure, success } from "./utils/Result";
+import {
+  failure,
+  map,
+  fromPredicate as resultFromPredicate,
+  isFailure,
+  success,
+} from "./utils/Result";
 import { Validator } from "./utils/Validation";
 
 export function fromPredicate<A, B extends A>(
@@ -12,6 +18,18 @@ export function fromPredicate<A>(predicate: Predicate<A>, message: string): Vali
 
 export function fromPredicate<A>(predicate: Predicate<A>, message: string): Validator<A, A> {
   return resultFromPredicate(predicate, () => [message]);
+}
+
+export function transform<I, A, B>(f: (a: A) => B): (validator: Validator<I, A>) => Validator<I, B>;
+
+export function transform<I, A, B>(f: (a: A) => B, validator: Validator<I, A>): Validator<I, B>;
+
+export function transform<I, A, B>(f: (a: A) => B, validator?: Validator<I, A>) {
+  if (validator !== undefined) {
+    return (input: I) => map(f, validator(input));
+  }
+
+  return (validator: Validator<I, A>) => transform(f, validator);
 }
 
 /**

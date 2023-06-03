@@ -35,3 +35,7 @@ export function extract<F, S>(result: Result<F, S>): S {
 
   return result.success;
 }
+
+export function map<F, A, B>(f: (a: A) => B, result: Result<F, A>): Result<F, B> {
+  return isSuccess(result) ? success(f(result.success)) : failure(result.failure);
+}
