@@ -27,3 +27,11 @@ export function isSuccess<F, S>(result: Result<F, S>): result is Success<S> {
 export function fromPredicate<F, S>(predicate: Predicate<S>, onFailure: () => F) {
   return (value: S): Result<F, S> => (predicate(value) ? success(value) : failure(onFailure()));
 }
+
+export function extract<F, S>(result: Result<F, S>): S {
+  if (isFailure(result)) {
+    throw new Error(`Cannot extract 'success' from Result - ${JSON.stringify(result)}`);
+  }
+
+  return result.success;
+}

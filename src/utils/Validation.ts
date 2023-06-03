@@ -1,7 +1,7 @@
 import { append, NonEmptyArray } from "./Array";
 import { FormErrors } from "./Form";
-import { some } from "./Record";
-import { failure, isFailure, Result, success } from "./Result";
+import { mapValues, some } from "./Record";
+import { failure, isFailure, Result, success, extract } from "./Result";
 
 export type Validator<I, O> = (input: I) => Result<NonEmptyArray<string>, O>;
 
@@ -22,20 +22,19 @@ export function validate<T, S extends ValidationSchema<T>>(
   values: T,
   schema: S,
 ): ValidationResult<T, S> {
-  const errors = {} as FormErrors<T>;
+  const result = {} as Record<keyof T, ReturnType<Validator<T[keyof T], unknown>>>;
 
   for (const key in values) {
-    const validator = schema[key];
-
-    if (validator) {
-      const result = validator(values[key]);
-      errors[key] = isFailure(result) ? result.failure : null;
-    }
+    result[key] = (schema[key] ?? success)(values[key]);
   }
 
-  const hasErrors = some((fieldErrors) => fieldErrors !== null, errors);
+  const hasErrors = some(result, isFailure);
 
-  return hasErrors ? failure(errors) : success(values as ValidatedValues<T, S>);
+  if (hasErrors) {
+    return failure(mapValues(result, (value) => (isFailure(value) ? value.failure : null)));
+  }
+
+  return success(mapValues(result, extract) as ValidatedValues<T, S>);
 }
 
 type FieldArrayValidationResult<T, S extends ValidationSchema<T>> = Result<
@@ -44,7 +43,7 @@ type FieldArrayValidationResult<T, S extends ValidationSchema<T>> = Result<
 >;
 
 export function validateFieldArray<T, S extends ValidationSchema<T>>(
-  values: T[],
+  values: Array<T>,
   schema: S,
 ): FieldArrayValidationResult<T, S> {
   const initial = {
