@@ -32,9 +32,8 @@ module.exports = {
           {
             patterns: [
               {
-                group: ["./pipe"],
-                // eslint-disable-next-line prettier/prettier
-                message: "The `pipe` function should only be imported in test files because it will not be included in the final bundle.",
+                group: ["./test-utils"],
+                message: "Importing test utilities is only permitted within test files.",
               },
             ],
           },

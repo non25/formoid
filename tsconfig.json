@@ -11,7 +11,7 @@
   "exclude": [
     "node_modules",
     "src/**/*.test.ts",
-    "src/pipe.ts"
+    "src/test-utils.ts"
   ],
   "include": [
     "src"

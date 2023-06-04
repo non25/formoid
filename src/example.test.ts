@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { pipe } from "./pipe";
+import { pipe } from "./test-utils";
 
 describe("Example", () => {
   test("obvious thing", () => {
