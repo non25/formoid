@@ -75,6 +75,39 @@ export function sequence<I, A, B, C, D, E, O>(
   f: Validator<E, O>,
 ): Validator<I, O>;
 
+export function sequence<I, A, B, C, D, E, F, O>(
+  a: Validator<I, A>,
+  b: Validator<A, B>,
+  c: Validator<B, C>,
+  d: Validator<C, D>,
+  e: Validator<D, E>,
+  f: Validator<E, F>,
+  g: Validator<F, O>,
+): Validator<I, O>;
+
+export function sequence<I, A, B, C, D, E, F, G, O>(
+  a: Validator<I, A>,
+  b: Validator<A, B>,
+  c: Validator<B, C>,
+  d: Validator<C, D>,
+  e: Validator<D, E>,
+  f: Validator<E, F>,
+  g: Validator<F, G>,
+  h: Validator<G, O>,
+): Validator<I, O>;
+
+export function sequence<I, A, B, C, D, E, F, G, H, O>(
+  a: Validator<I, A>,
+  b: Validator<A, B>,
+  c: Validator<B, C>,
+  d: Validator<C, D>,
+  e: Validator<D, E>,
+  f: Validator<E, F>,
+  g: Validator<F, G>,
+  h: Validator<G, H>,
+  i: Validator<H, I>,
+): Validator<I, O>;
+
 export function sequence(
   ...validators: NonEmptyArray<Validator<unknown, unknown>>
 ): Validator<unknown, unknown> {
@@ -121,6 +154,39 @@ export function parallel<I, O>(
   d: Validator<I, O>,
   e: Validator<I, O>,
   f: Validator<I, O>,
+): Validator<I, O>;
+
+export function parallel<I, O>(
+  a: Validator<I, O>,
+  b: Validator<I, O>,
+  c: Validator<I, O>,
+  d: Validator<I, O>,
+  e: Validator<I, O>,
+  f: Validator<I, O>,
+  g: Validator<I, O>,
+): Validator<I, O>;
+
+export function parallel<I, O>(
+  a: Validator<I, O>,
+  b: Validator<I, O>,
+  c: Validator<I, O>,
+  d: Validator<I, O>,
+  e: Validator<I, O>,
+  f: Validator<I, O>,
+  g: Validator<I, O>,
+  h: Validator<I, O>,
+): Validator<I, O>;
+
+export function parallel<I, O>(
+  a: Validator<I, O>,
+  b: Validator<I, O>,
+  c: Validator<I, O>,
+  d: Validator<I, O>,
+  e: Validator<I, O>,
+  f: Validator<I, O>,
+  g: Validator<I, O>,
+  h: Validator<I, O>,
+  i: Validator<I, O>,
 ): Validator<I, O>;
 
 export function parallel<I, O>(
