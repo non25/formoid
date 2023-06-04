@@ -6,6 +6,7 @@ import {
   fromPredicate as resultFromPredicate,
   isFailure,
   success,
+  flatMap,
 } from "./utils/Result";
 import { Validator } from "./utils/Validation";
 
@@ -30,6 +31,10 @@ export function transform<I, A, B>(f: (a: A) => B, validator?: Validator<I, A>) 
   }
 
   return (validator: Validator<I, A>) => transform(f, validator);
+}
+
+export function chain<I, A, B>(ab: Validator<A, B>): (ia: Validator<I, A>) => Validator<I, B> {
+  return (ia) => (input) => flatMap(ab, ia(input));
 }
 
 /**
@@ -75,7 +80,7 @@ export function sequence(
 ): Validator<unknown, unknown> {
   return function (input) {
     return validators.reduce(
-      (result, validator) => (isFailure(result) ? result : validator(result.success)),
+      (result, validator) => flatMap(validator, result),
       success(input) as ReturnType<Validator<unknown, unknown>>,
     );
   };

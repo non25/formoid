@@ -39,3 +39,7 @@ export function extract<F, S>(result: Result<F, S>): S {
 export function map<F, A, B>(f: (a: A) => B, result: Result<F, A>): Result<F, B> {
   return isSuccess(result) ? success(f(result.success)) : failure(result.failure);
 }
+
+export function flatMap<F, A, B>(f: (a: A) => Result<F, B>, result: Result<F, A>): Result<F, B> {
+  return isSuccess(result) ? f(result.success) : failure(result.failure);
+}
