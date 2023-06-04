@@ -1,6 +1,9 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 /** Importing test utilities is only permitted within test files. */
 
+import { Validator } from "./utils";
+import { fromPredicate } from "./validator";
+
 export function pipe<A, B>(a: A, ab: (a: A) => B): B;
 
 export function pipe<A, B, C>(a: A, ab: (a: A) => B, bc: (b: B) => C): C;
@@ -46,4 +49,19 @@ export function pipe<A, B, C, D, E, F>(
     case 6:
       return ef!(de!(cd!(bc!(ab!(a)))));
   }
+}
+
+/**
+ * NonEmptyString
+ */
+interface NonEmptyStringBrand {
+  readonly NonEmptyString: unique symbol;
+}
+
+export type NonEmptyString = string & NonEmptyStringBrand;
+
+export const isNonEmptyString = (s: string): s is NonEmptyString => s !== "";
+
+export function nonEmptyStringValidator(message?: string): Validator<string, NonEmptyString> {
+  return fromPredicate(isNonEmptyString, message || "This field is required");
 }
