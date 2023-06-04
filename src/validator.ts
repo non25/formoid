@@ -139,7 +139,7 @@ export function parallel<I, O>(
 /**
  * NonNullable
  */
-function isNonNullable<A>(value: A | null | undefined): value is NonNullable<A> {
+function isNonNullable<A>(value: A): value is NonNullable<A> {
   return value !== null && value !== undefined;
 }
 
