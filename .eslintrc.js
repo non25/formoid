@@ -45,5 +45,11 @@ module.exports = {
         },
       },
     },
+    {
+      files: ["src/**/*.test.ts"],
+      rules: {
+        "@typescript-eslint/no-restricted-imports": "off",
+      },
+    },
   ],
 };

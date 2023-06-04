@@ -1,6 +1,6 @@
-/**
- * The `pipe` function should only be imported in test files because it will not be included in the final bundle.
- */
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
+/** Importing test utilities is only permitted within test files. */
+
 export function pipe<A, B>(a: A, ab: (a: A) => B): B;
 
 export function pipe<A, B, C>(a: A, ab: (a: A) => B, bc: (b: B) => C): C;
