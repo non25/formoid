@@ -6,14 +6,8 @@
     "outDir": "lib",
     "rootDir": "src",
     "strict": true,
-    "target": "es6"
+    "target": "es6",
+    "types": ["vitest/globals"]
   },
-  "exclude": [
-    "node_modules",
-    "src/**/*.test.ts",
-    "src/test-utils.ts"
-  ],
-  "include": [
-    "src"
-  ]
+  "include": ["src"]
 }

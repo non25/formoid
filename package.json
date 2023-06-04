@@ -10,7 +10,7 @@
   "repository": "https://github.com/kolyamba2105/formoid",
   "license": "MIT",
   "scripts": {
-    "build": "rimraf lib && tsc",
+    "build": "rimraf lib && tsc -p tsconfig.build.json",
     "format-build": "prettier --write --config .prettierrc ./lib/**/*.ts",
     "lint": "eslint --fix './src/*.ts*'",
     "prepublish": "yarn lint && yarn test run && yarn build && yarn format-build",
