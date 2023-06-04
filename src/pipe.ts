@@ -1,5 +1,5 @@
 /**
- * This function is meant for internal use only
+ * The `pipe` function should only be imported in test files because it will not be included in the final bundle.
  */
 export function pipe<A, B>(a: A, ab: (a: A) => B): B;
 
