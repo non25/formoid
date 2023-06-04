@@ -13,7 +13,7 @@
     "build": "rimraf lib && tsc",
     "format-build": "prettier --write --config .prettierrc ./lib/**/*.ts",
     "lint": "eslint --fix './src/*.ts*'",
-    "prepublish": "yarn lint && yarn build && yarn format-build",
+    "prepublish": "yarn lint && yarn test run && yarn build && yarn format-build",
     "test": "vitest",
     "watch": "tsc --watch"
   },
