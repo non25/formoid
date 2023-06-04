@@ -1,4 +1,4 @@
-import { append, NonEmptyArray } from "./Array";
+import { NonEmptyArray } from "./Array";
 import { FormErrors } from "./Form";
 import { mapValues, some } from "./Record";
 import { failure, isFailure, Result, success, extract } from "./Result";
@@ -56,13 +56,13 @@ export function validateFieldArray<T, S extends ValidationSchema<T>>(
     if (isFailure(groupValidationResult)) {
       return {
         ...result,
-        errors: append(groupValidationResult.failure, result.errors),
+        errors: result.errors.concat(groupValidationResult.failure),
       };
     }
 
     return {
-      errors: append(null, result.errors),
-      values: append(groupValidationResult.success, result.values),
+      errors: result.errors.concat(null),
+      values: result.values.concat(groupValidationResult.success),
     };
   }, initial);
 

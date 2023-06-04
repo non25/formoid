@@ -1,5 +1,5 @@
 import { Reducer, useCallback, useMemo, useReducer, useState } from "react";
-import { append, deleteAt, modifyAt, NonEmptyArray } from "./utils/Array";
+import { deleteAt, modifyAt, NonEmptyArray } from "./utils/Array";
 import {
   FieldGroup,
   FieldProps,
@@ -375,7 +375,7 @@ export function useForm<
         if (initialFieldGroupState) {
           return {
             ...state,
-            fieldArray: append(initialFieldGroupState, state.fieldArray),
+            fieldArray: state.fieldArray.concat(initialFieldGroupState),
           };
         }
 
