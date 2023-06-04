@@ -122,15 +122,11 @@ export function parallel<I, O>(
   ...validators: NonEmptyArray<Validator<I, O>>
 ): Validator<I, unknown> {
   return (input) => {
-    const failures: Array<string> = [];
+    const failures = validators.reduce((failures, validator) => {
+      const result = validator(input);
 
-    for (const key in validators) {
-      const result = validators[key](input);
-
-      if (isFailure(result)) {
-        failures.push(...result.failure);
-      }
-    }
+      return isFailure(result) ? failures.concat(result.failure) : failures;
+    }, [] as Array<string>);
 
     return isNonEmpty(failures) ? failure(failures) : success(input);
   };
