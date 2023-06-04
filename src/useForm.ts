@@ -290,9 +290,7 @@ export function useForm<
     const modifyFieldArray = (
       index: number,
       fn: (a: FormState<FieldArrayValues>) => FormState<FieldArrayValues>,
-    ): FormState<FieldArrayValues>[] => {
-      return modifyAt(index, fn, state.fieldArray) || state.fieldArray;
-    };
+    ): Array<FormState<FieldArrayValues>> => modifyAt(index, fn, state.fieldArray);
 
     switch (action.id) {
       case "Form.Blur":
@@ -430,16 +428,10 @@ export function useForm<
         };
 
       case "FieldArray.Remove": {
-        const updatedFieldArray = deleteAt(action.index, state.fieldArray);
-
-        if (updatedFieldArray) {
-          return {
-            ...state,
-            fieldArray: updatedFieldArray,
-          };
-        }
-
-        return state;
+        return {
+          ...state,
+          fieldArray: deleteAt(action.index, state.fieldArray),
+        };
       }
 
       case "FieldArray.Validate":
