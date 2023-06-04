@@ -33,8 +33,8 @@ export function transform<I, A, B>(f: (a: A) => B, validator?: Validator<I, A>) 
   return (validator: Validator<I, A>) => transform(f, validator);
 }
 
-export function chain<I, A, B>(ab: Validator<A, B>): (ia: Validator<I, A>) => Validator<I, B> {
-  return (ia) => (input) => flatMap(ab, ia(input));
+export function chain<I, A, O>(ao: Validator<A, O>): (ia: Validator<I, A>) => Validator<I, O> {
+  return (ia) => (input) => flatMap(ao, ia(input));
 }
 
 /**
