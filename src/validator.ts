@@ -70,19 +70,14 @@ export function sequence<I, A, B, C, D, E, O>(
   f: Validator<E, O>,
 ): Validator<I, O>;
 
-export function sequence<I>(
-  ...validators: NonEmptyArray<Validator<I, unknown>>
-): Validator<I, unknown> {
-  return (input) => {
-    for (const key in validators) {
-      const result = validators[key](input);
-
-      if (isFailure(result)) {
-        return failure(result.failure);
-      }
-    }
-
-    return success(input);
+export function sequence(
+  ...validators: NonEmptyArray<Validator<unknown, unknown>>
+): Validator<unknown, unknown> {
+  return function (input) {
+    return validators.reduce(
+      (result, validator) => (isFailure(result) ? result : validator(result.success)),
+      success(input) as ReturnType<Validator<unknown, unknown>>,
+    );
   };
 }
 
