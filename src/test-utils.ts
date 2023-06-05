@@ -1,8 +1,16 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 /** Importing test utilities is only permitted within test files. */
 
-import { Validator } from "./utils";
-import { fromPredicate } from "./validator";
+import { ValidationSchema, Validator } from "./utils";
+import {
+  chain,
+  fromPredicate,
+  lengthRange,
+  match,
+  parallel,
+  sequence,
+  transform,
+} from "./validator";
 
 export function pipe<A, B>(a: A, ab: (a: A) => B): B;
 
@@ -65,3 +73,39 @@ export const isNonEmptyString = (s: string): s is NonEmptyString => s !== "";
 export function nonEmptyStringValidator(message?: string): Validator<string, NonEmptyString> {
   return fromPredicate(isNonEmptyString, message || "This field is required");
 }
+
+export const nonBlankStringValidator: Validator<string, string> = pipe(
+  fromPredicate((v: string) => v.trim().length !== 0, "Value should be a non-blank string!"),
+  transform((value) => value.trim()),
+);
+
+/**
+ * LoginForm
+ */
+export type LoginFormValues = {
+  name: string;
+  password: string;
+  confirmPassword: string;
+};
+
+export const loginSchema: (values: LoginFormValues) => ValidationSchema<LoginFormValues> = ({
+  password,
+}) => ({
+  name: pipe(
+    nonBlankStringValidator,
+    chain(lengthRange(4, 64, "User name length must be between 4 and 64 chars!")),
+  ),
+  password: sequence(
+    nonBlankStringValidator,
+    parallel(
+      lengthRange(8, 64, "Password length must be between 8 and 64 chars!"),
+      match(/(?=.*[A-Z])/, "Password must contain at least 1 uppercase letter!"),
+      match(/(?=.*[a-z])/, "Password must contain at least 1 lowercase letter!"),
+      match(/(?=.*\d)/, "Password must contain at least 1 digit!"),
+    ),
+  ),
+  confirmPassword: sequence(
+    nonBlankStringValidator,
+    fromPredicate((confirm) => confirm === password, "Passwords do not match!"),
+  ),
+});
