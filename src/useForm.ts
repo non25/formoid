@@ -118,9 +118,9 @@ type HandleSubmitExtended<
   (onSubmit: OnSubmitExtendedMatch<Values, Schema, FieldArrayValues, FieldArraySchema>): void;
 };
 
-type UpdateExtended<Values, FieldArrayValues> = Update<{
-  form: Values;
-  fieldArray: Array<FieldArrayValues>;
+type UpdateExtended<Values, FieldArrayValues> = Partial<{
+  form: Update<Values>;
+  fieldArray: Update<Array<FieldArrayValues>>;
 }>;
 
 type UseFormReturnExtended<
@@ -169,9 +169,7 @@ type Action<Values, FieldArrayValues> =
     }
   | {
       id: "Form.Reset";
-      update?:
-        | { id: "regular"; handler: Update<Values> }
-        | { id: "extended"; handler: UpdateExtended<Values, FieldArrayValues> };
+      update?: Update<Values>;
     }
   | {
       id: "Form.SetErrors";
@@ -220,6 +218,10 @@ type Action<Values, FieldArrayValues> =
   | {
       id: "FieldArray.Remove";
       index: number;
+    }
+  | {
+      id: "FieldArray.Reset";
+      update?: Update<Array<FieldArrayValues>>;
     };
 
 export function useForm<
@@ -323,25 +325,10 @@ export function useForm<
 
       case "Form.Reset":
         if (action.update) {
-          switch (action.update.id) {
-            case "regular":
-              return {
-                ...state,
-                form: initializeForm(action.update.handler(formValues)),
-              };
-
-            case "extended": {
-              const { form, fieldArray } = action.update.handler({
-                form: formValues,
-                fieldArray: fieldArrayValues,
-              });
-
-              return {
-                form: initializeForm(form),
-                fieldArray: fieldArray.map(initializeForm),
-              };
-            }
-          }
+          return {
+            ...state,
+            form: initializeForm(action.update(formValues)),
+          };
         }
 
         return initialState;
@@ -404,12 +391,21 @@ export function useForm<
           ),
         };
 
-      case "FieldArray.Remove": {
+      case "FieldArray.Remove":
         return {
           ...state,
           fieldArray: deleteAt(action.index, state.fieldArray),
         };
-      }
+
+      case "FieldArray.Reset":
+        if (action.update) {
+          return {
+            ...state,
+            fieldArray: action.update(fieldArrayValues).map(initializeForm),
+          };
+        }
+
+        return initialState;
     }
   };
 
@@ -655,18 +651,16 @@ export function useForm<
   }
 
   const handleReset = useCallback((update?: Update<Values>): void => {
-    dispatch({
-      id: "Form.Reset",
-      update: update ? { id: "regular", handler: update } : undefined,
-    });
+    dispatch({ id: "Form.Reset", update });
   }, []);
 
-  const handleResetExtended = useCallback((update?: UpdateExtended<Values, FieldArrayValues>) => {
-    dispatch({
-      id: "Form.Reset",
-      update: update ? { id: "extended", handler: update } : undefined,
-    });
-  }, []);
+  const handleResetExtended = useCallback(
+    (update?: Partial<{ form: Update<Values>; fieldArray: Update<Array<FieldArrayValues>> }>) => {
+      dispatch({ id: "Form.Reset", update: update?.form });
+      dispatch({ id: "FieldArray.Reset", update: update?.fieldArray });
+    },
+    [],
+  );
 
   if (isExtendedConfig(config)) {
     return {
