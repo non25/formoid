@@ -47,9 +47,7 @@ export function initializeForm<T>(data: T): FormState<T> {
 export function getValues<T>(formState: FormState<T>): T {
   const result = {} as T;
 
-  for (const key in formState) {
-    result[key] = formState[key].value;
-  }
+  for (const key in formState) result[key] = formState[key].value;
 
   return result;
 }
@@ -57,9 +55,7 @@ export function getValues<T>(formState: FormState<T>): T {
 export function updateValues<T>(formState: FormState<T>, values: T): FormState<T> {
   const result = {} as FormState<T>;
 
-  for (const key in formState) {
-    result[key] = { ...formState[key], value: values[key] };
-  }
+  for (const key in formState) result[key] = Object.assign(formState[key], { value: values[key] });
 
   return result;
 }
@@ -67,9 +63,7 @@ export function updateValues<T>(formState: FormState<T>, values: T): FormState<T
 export function getErrors<T>(formState: FormState<T>): FormErrors<T> {
   const result = {} as FormErrors<T>;
 
-  for (const key in formState) {
-    result[key] = formState[key].errors;
-  }
+  for (const key in formState) result[key] = formState[key].errors;
 
   return result;
 }
