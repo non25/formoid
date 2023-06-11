@@ -9,7 +9,6 @@ import { NonEmptyArray, deleteAt, modifyAt } from "./utils/Array";
 import {
   FieldGroup,
   FieldProps,
-  FieldState,
   FormErrors,
   FormState,
   SetErrors,
@@ -21,6 +20,7 @@ import {
   initializeForm,
   updateValues,
 } from "./utils/Form";
+import { mapValues } from "./utils/Record";
 import { isFailure, isSuccess } from "./utils/Result";
 import { Validator } from "./validator";
 
@@ -423,103 +423,80 @@ export function useForm<
 
   const fieldArrayErrors = useMemo(() => state.fieldArray.map(getErrors), [state.fieldArray]);
 
-  const validateFormField = useCallback(
-    <K extends keyof Values>(key: K) => {
-      const schema = isExtendedConfig(config)
-        ? config.form.validators(formValues, fieldArrayValues)
-        : config.validators(formValues);
-
-      const validator = schema[key] as Validator<Values[K], unknown> | null;
-
-      validator?.(formValues[key]).then((result) => {
-        dispatch({ id: "Form.SetErrors", key, errors: isFailure(result) ? result.failure : null });
-      });
-    },
-    [config, fieldArrayValues, formValues],
-  );
+  const formValidationSchema: Schema = isExtendedConfig(config)
+    ? config.form.validators(formValues, fieldArrayValues)
+    : config.validators(formValues);
 
   const fieldProps = useCallback(
-    <K extends keyof Values>(key: K): FieldProps<Values[K]> => ({
-      ...state.form[key],
-      onChange: (value: Values[K]) => {
-        dispatch({ id: "Form.Change", key, value });
+    function <K extends keyof Values>(key: K): FieldProps<Values[K]> {
+      function validate() {
+        const validator = formValidationSchema[key] as Validator<Values[K], unknown> | null;
 
-        if (config.validationStrategy === "onChange") {
-          validateFormField(key);
-        }
-      },
-      onBlur: () => {
-        dispatch({ id: "Form.Blur", key });
-
-        if (config.validationStrategy === "onBlur") {
-          validateFormField(key);
-        }
-      },
-    }),
-    [config.validationStrategy, state.form, validateFormField],
-  );
-
-  const validateFieldArrayField = useCallback(
-    <K extends keyof FieldArrayValues>(index: number, key: K) => {
-      if (isExtendedConfig(config)) {
-        const schema = config.fieldArray.validators(fieldArrayValues, formValues);
-        const validator = schema[key] as Validator<FieldArrayValues[K], unknown> | null;
-
-        validator?.(fieldArrayValues[index][key]).then((result) => {
+        validator?.(state.form[key].value).then((result) => {
           dispatch({
-            id: "FieldArray.SetErrors",
-            index,
+            id: "Form.SetErrors",
             key,
             errors: isFailure(result) ? result.failure : null,
           });
         });
       }
+
+      return {
+        ...state.form[key],
+        onBlur: () => {
+          dispatch({ id: "Form.Blur", key });
+
+          if (config.validationStrategy === "onBlur") validate();
+        },
+        onChange: (value: Values[K]) => {
+          dispatch({ id: "Form.Change", key, value });
+
+          if (config.validationStrategy === "onChange") validate();
+        },
+      };
     },
-    [config, fieldArrayValues, formValues],
+    [config.validationStrategy, formValidationSchema, state.form],
   );
 
-  const fieldStateToProps = useCallback(
-    <K extends keyof FieldArrayValues>(
-      index: number,
-      fieldState: FieldState<FieldArrayValues[K]>,
-      key: K,
-    ): FieldProps<FieldArrayValues[K]> => ({
-      ...fieldState,
-      onBlur: () => {
-        dispatch({ id: "FieldArray.Blur", index, key });
+  const fieldArrayValidationSchema: FieldArraySchema | null = isExtendedConfig(config)
+    ? config.fieldArray.validators(fieldArrayValues, formValues)
+    : null;
 
-        if (config.validationStrategy === "onBlur") {
-          validateFieldArrayField(index, key);
+  const fieldGroups = useMemo(() => {
+    return state.fieldArray.map((groupState, index) => {
+      return mapValues(groupState, (group, key) => {
+        function validate() {
+          const validator = fieldArrayValidationSchema?.[key] as
+            | Validator<FieldArrayValues[typeof key], unknown>
+            | null
+            | undefined;
+
+          validator?.(group.value).then((result) => {
+            dispatch({
+              id: "FieldArray.SetErrors",
+              index,
+              key,
+              errors: isFailure(result) ? result.failure : null,
+            });
+          });
         }
-      },
-      onChange: (value) => {
-        dispatch({ id: "FieldArray.Change", index, key, value });
 
-        if (config.validationStrategy === "onChange") {
-          validateFieldArrayField(index, key);
-        }
-      },
-    }),
-    [config.validationStrategy, validateFieldArrayField],
-  );
+        return {
+          ...group,
+          onBlur: () => {
+            dispatch({ id: "FieldArray.Blur", index, key });
 
-  const makeFieldGroup = useCallback(
-    (groupState: FormState<FieldArrayValues>, index: number): FieldGroup<FieldArrayValues> => {
-      const fieldGroup = {} as FieldGroup<FieldArrayValues>;
+            if (config.validationStrategy === "onBlur") validate();
+          },
+          onChange: (value: FieldArrayValues[typeof key]) => {
+            dispatch({ id: "FieldArray.Change", index, key, value });
 
-      for (const key in groupState) {
-        fieldGroup[key] = fieldStateToProps(index, groupState[key], key);
-      }
-
-      return fieldGroup;
-    },
-    [fieldStateToProps],
-  );
-
-  const fieldGroups = useMemo(
-    () => state.fieldArray.map(makeFieldGroup),
-    [makeFieldGroup, state.fieldArray],
-  );
+            if (config.validationStrategy === "onChange") validate();
+          },
+        };
+      }) as unknown as FieldGroup<FieldArrayValues>;
+    });
+  }, [config.validationStrategy, fieldArrayValidationSchema, state.fieldArray]);
 
   const appendFieldGroup = useCallback((): void => dispatch({ id: "FieldArray.Append" }), []);
 
@@ -536,11 +513,11 @@ export function useForm<
       dispatch({ id: "Form.Disable", key });
     }
 
-    if (isExtendedConfig(config)) {
-      for (const [index] of fieldArrayValues.entries()) {
-        for (const key in fieldArrayValues[index]) {
-          dispatch({ id: "FieldArray.Disable", index, key });
-        }
+    if (!isExtendedConfig(config)) return;
+
+    for (const [index] of fieldArrayValues.entries()) {
+      for (const key in fieldArrayValues[index]) {
+        dispatch({ id: "FieldArray.Disable", index, key });
       }
     }
   }, [config, fieldArrayValues, formValues]);
@@ -552,11 +529,11 @@ export function useForm<
       dispatch({ id: "Form.Enable", key });
     }
 
-    if (isExtendedConfig(config)) {
-      for (const [index] of fieldArrayValues.entries()) {
-        for (const key in fieldArrayValues[index]) {
-          dispatch({ id: "FieldArray.Enable", index, key });
-        }
+    if (!isExtendedConfig(config)) return;
+
+    for (const [index] of fieldArrayValues.entries()) {
+      for (const key in fieldArrayValues[index]) {
+        dispatch({ id: "FieldArray.Enable", index, key });
       }
     }
   }, [config, fieldArrayValues, formValues]);
@@ -570,15 +547,11 @@ export function useForm<
   }, []);
 
   const propagateFormErrors = useCallback((formErrors: FormErrors<Values>): void => {
-    for (const key in formErrors) {
-      dispatch({ id: "Form.SetErrors", key, errors: formErrors[key] });
-    }
+    for (const key in formErrors) dispatch({ id: "Form.SetErrors", key, errors: formErrors[key] });
   }, []);
 
   const setFieldArrayErrors: SetFieldArrayErrors<FieldArrayValues> = useCallback(
-    (index, key, errors): void => {
-      dispatch({ id: "FieldArray.SetErrors", index, key, errors });
-    },
+    (index, key, errors) => dispatch({ id: "FieldArray.SetErrors", index, key, errors }),
     [],
   );
 
@@ -611,9 +584,7 @@ export function useForm<
   function handleSubmit(onSubmit: OnSubmitMatch<Values, Schema>): void;
 
   function handleSubmit(onSubmit: OnSubmit<Values, Schema> | OnSubmitMatch<Values, Schema>): void {
-    if (isExtendedConfig(config)) {
-      return;
-    }
+    if (isExtendedConfig(config)) return;
 
     validateForm(formValues, config.validators(formValues)).then((result) => {
       if (isFailure(result)) {
@@ -625,9 +596,9 @@ export function useForm<
       } else {
         disableForm();
 
-        (onSubmit instanceof Function ? onSubmit : onSubmit.onSuccess)(result.success).finally(
-          enableForm,
-        );
+        const submit = onSubmit instanceof Function ? onSubmit : onSubmit.onSuccess;
+
+        submit(result.success).finally(enableForm);
       }
     });
   }
@@ -645,41 +616,42 @@ export function useForm<
       | OnSubmitExtended<Values, Schema, FieldArrayValues, FieldArraySchema>
       | OnSubmitExtendedMatch<Values, Schema, FieldArrayValues, FieldArraySchema>,
   ): void {
-    if (isExtendedConfig(config)) {
-      const formValidationResult = validateForm(
-        formValues,
-        config.form.validators(formValues, fieldArrayValues),
-      );
-      const fieldArrayValidationResult = validateFieldArray(
-        fieldArrayValues,
-        config.fieldArray.validators(fieldArrayValues, formValues),
-      );
+    if (!isExtendedConfig(config)) return;
 
-      Promise.all([formValidationResult, fieldArrayValidationResult]).then(
-        ([formValidationResult, fieldArrayValidationResult]) => {
-          if (isSuccess(formValidationResult) && isSuccess(fieldArrayValidationResult)) {
-            disableForm();
+    const formValidationResult = validateForm(
+      formValues,
+      config.form.validators(formValues, fieldArrayValues),
+    );
+    const fieldArrayValidationResult = validateFieldArray(
+      fieldArrayValues,
+      config.fieldArray.validators(fieldArrayValues, formValues),
+    );
 
-            (onSubmit instanceof Function ? onSubmit : onSubmit.onSuccess)(
-              formValidationResult.success,
-              fieldArrayValidationResult.success,
-            ).finally(enableForm);
-          } else {
-            if (isFailure(formValidationResult)) {
-              propagateFormErrors(formValidationResult.failure);
-            }
+    Promise.all([formValidationResult, fieldArrayValidationResult]).then(
+      ([formValidationResult, fieldArrayValidationResult]) => {
+        if (isSuccess(formValidationResult) && isSuccess(fieldArrayValidationResult)) {
+          disableForm();
 
-            if (isFailure(fieldArrayValidationResult)) {
-              propagateFieldArrayErrors(fieldArrayValidationResult.failure);
-            }
+          const submit = onSubmit instanceof Function ? onSubmit : onSubmit.onSuccess;
 
-            if (onSubmit instanceof Function) return;
-
-            onSubmit.onFailure();
+          submit(formValidationResult.success, fieldArrayValidationResult.success).finally(
+            enableForm,
+          );
+        } else {
+          if (isFailure(formValidationResult)) {
+            propagateFormErrors(formValidationResult.failure);
           }
-        },
-      );
-    }
+
+          if (isFailure(fieldArrayValidationResult)) {
+            propagateFieldArrayErrors(fieldArrayValidationResult.failure);
+          }
+
+          if (onSubmit instanceof Function) return;
+
+          onSubmit.onFailure();
+        }
+      },
+    );
   }
 
   const handleReset = useCallback((update?: Update<Values>): void => {
