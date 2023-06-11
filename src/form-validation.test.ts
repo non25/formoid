@@ -1,11 +1,11 @@
+import { validateForm } from "./form-validation";
 import { LoginFormValues, loginSchema } from "./test-utils";
-import { validate } from "./utils";
 import { failure, success } from "./utils/Result";
 
 describe("Form validation", () => {
   describe("validate", () => {
     it("should validate data against loginSchema", () => {
-      const result = (vs: LoginFormValues) => validate(vs, loginSchema(vs));
+      const result = (vs: LoginFormValues) => validateForm(vs, loginSchema(vs));
 
       const correctValues: LoginFormValues = {
         name: "username",

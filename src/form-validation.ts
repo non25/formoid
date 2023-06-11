@@ -1,10 +1,11 @@
-import { NonEmptyArray } from "./Array";
-import { FormErrors } from "./Form";
-import { mapValues, some } from "./Record";
-import { failure, isFailure, Result, success, extract } from "./Result";
+import { FormErrors } from "./utils/Form";
+import { mapValues, some } from "./utils/Record";
+import { Result, extract, failure, isFailure, success } from "./utils/Result";
+import { Validator } from "./validator";
 
-export type Validator<I, O> = (input: I) => Result<NonEmptyArray<string>, O>;
-
+/**
+ * Form validation
+ */
 export type ValidationSchema<T> = {
   [K in keyof T]: Validator<T[K], unknown> | null;
 };
@@ -18,41 +19,50 @@ type ValidationResult<T, S extends ValidationSchema<T>> = Result<
   ValidatedValues<T, S>
 >;
 
-export function validate<T, S extends ValidationSchema<T>>(
+export async function validateForm<T, S extends ValidationSchema<T>>(
   values: T,
   schema: S,
-): ValidationResult<T, S> {
-  const result = {} as Record<keyof T, ReturnType<Validator<T[keyof T], unknown>>>;
+): Promise<ValidationResult<T, S>> {
+  const schemaEntries = Object.entries(schema).map(([fieldName, validator]) => {
+    return [fieldName, validator ?? ((input: T[keyof T]) => Promise.resolve(success(input)))];
+  }) as Array<[keyof T, Validator<T[keyof T], unknown>]>;
 
-  for (const key in values) {
-    result[key] = (schema[key] ?? success)(values[key]);
-  }
+  const result = Object.fromEntries(
+    await Promise.all(
+      schemaEntries.map(async ([key, validator]) => [key, await validator(values[key])] as const),
+    ),
+  );
 
   const hasErrors = some(result, isFailure);
 
   if (hasErrors) {
-    return failure(mapValues(result, (value) => (isFailure(value) ? value.failure : null)));
+    return failure(
+      mapValues(result, (value) => (isFailure(value) ? value.failure : null)) as FormErrors<T>,
+    );
   }
 
   return success(mapValues(result, extract) as ValidatedValues<T, S>);
 }
 
+/**
+ * Field array validation
+ */
 type FieldArrayValidationResult<T, S extends ValidationSchema<T>> = Result<
   Array<FormErrors<T> | null>,
   Array<ValidatedValues<T, S>>
 >;
 
-export function validateFieldArray<T, S extends ValidationSchema<T>>(
+export async function validateFieldArray<T, S extends ValidationSchema<T>>(
   values: Array<T>,
   schema: S,
-): FieldArrayValidationResult<T, S> {
+): Promise<FieldArrayValidationResult<T, S>> {
   const initial = {
     errors: [] as Array<FormErrors<T> | null>,
     values: [] as Array<ValidatedValues<T, S>>,
   };
-  const result = values.reduce((result, groupValues) => {
-    const groupValidationResult = validate(groupValues, schema);
-
+  const result = (
+    await Promise.all(values.map((groupValues) => validateForm(groupValues, schema)))
+  ).reduce((result, groupValidationResult) => {
     if (isFailure(groupValidationResult)) {
       return {
         ...result,

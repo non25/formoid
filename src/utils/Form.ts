@@ -1,6 +1,4 @@
 import { NonEmptyArray } from "./Array";
-import { isFailure } from "./Result";
-import { ValidationSchema, Validator } from "./Validation";
 
 export type FieldState<T> = {
   disabled: boolean;
@@ -98,26 +96,5 @@ export function formStateManager<T>(state: FormState<T>) {
       ...state,
       [key]: { ...state[key], errors },
     }),
-    validate: <K extends keyof T, S extends ValidationSchema<T>>(
-      key: K,
-      schema: S,
-    ): FormState<T> => {
-      const values = getValues(state);
-      const validator = schema[key] as Validator<T[keyof T], unknown> | null;
-
-      if (validator) {
-        const result = validator(values[key]);
-
-        return {
-          ...state,
-          [key]: {
-            ...state[key],
-            errors: isFailure(result) ? result.failure : null,
-          },
-        };
-      }
-
-      return state;
-    },
   };
 }

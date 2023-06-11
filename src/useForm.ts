@@ -1,27 +1,28 @@
 import { Reducer, useCallback, useMemo, useReducer, useState } from "react";
-import { deleteAt, modifyAt, NonEmptyArray } from "./utils/Array";
+import {
+  ValidatedValues,
+  ValidationSchema,
+  validateFieldArray,
+  validateForm,
+} from "./form-validation";
+import { NonEmptyArray, deleteAt, modifyAt } from "./utils/Array";
 import {
   FieldGroup,
   FieldProps,
   FieldState,
   FormErrors,
   FormState,
+  SetErrors,
+  SetFieldArrayErrors,
+  Update,
   formStateManager,
   getErrors,
   getValues,
   initializeForm,
-  SetErrors,
-  SetFieldArrayErrors,
-  Update,
   updateValues,
 } from "./utils/Form";
 import { isFailure, isSuccess } from "./utils/Result";
-import {
-  validate,
-  ValidatedValues,
-  validateFieldArray,
-  ValidationSchema,
-} from "./utils/Validation";
+import { Validator } from "./validator";
 
 type ValidationStrategy = "onChange" | "onBlur" | "onSubmit";
 
@@ -182,10 +183,6 @@ type Action<Values, FieldArrayValues> =
       update: Update<Values>;
     }
   | {
-      id: "Form.Validate";
-      key: keyof Values;
-    }
-  | {
       id: "FieldArray.Append";
     }
   | {
@@ -223,11 +220,6 @@ type Action<Values, FieldArrayValues> =
   | {
       id: "FieldArray.Remove";
       index: number;
-    }
-  | {
-      id: "FieldArray.Validate";
-      index: number;
-      key: keyof FieldArrayValues;
     };
 
 export function useForm<
@@ -329,21 +321,6 @@ export function useForm<
           form: updateValues(state.form, action.update(formValues)),
         };
 
-      case "Form.Validate": {
-        const getSchema = () => {
-          if (isExtendedConfig(config)) {
-            return config.form.validators(formValues, fieldArrayValues);
-          }
-
-          return config.validators(formValues);
-        };
-
-        return {
-          ...state,
-          form: formManager.validate(action.key, getSchema()),
-        };
-      }
-
       case "Form.Reset":
         if (action.update) {
           switch (action.update.id) {
@@ -433,20 +410,6 @@ export function useForm<
           fieldArray: deleteAt(action.index, state.fieldArray),
         };
       }
-
-      case "FieldArray.Validate":
-        if (isExtendedConfig(config)) {
-          const schema = config.fieldArray.validators(fieldArrayValues, formValues);
-
-          return {
-            ...state,
-            fieldArray: modifyFieldArray(action.index, (group) =>
-              formStateManager(group).validate(action.key, schema),
-            ),
-          };
-        }
-
-        return state;
     }
   };
 
@@ -460,6 +423,21 @@ export function useForm<
 
   const fieldArrayErrors = useMemo(() => state.fieldArray.map(getErrors), [state.fieldArray]);
 
+  const validateFormField = useCallback(
+    <K extends keyof Values>(key: K) => {
+      const schema = isExtendedConfig(config)
+        ? config.form.validators(formValues, fieldArrayValues)
+        : config.validators(formValues);
+
+      const validator = schema[key] as Validator<Values[K], unknown> | null;
+
+      validator?.(formValues[key]).then((result) => {
+        dispatch({ id: "Form.SetErrors", key, errors: isFailure(result) ? result.failure : null });
+      });
+    },
+    [config, fieldArrayValues, formValues],
+  );
+
   const fieldProps = useCallback(
     <K extends keyof Values>(key: K): FieldProps<Values[K]> => ({
       ...state.form[key],
@@ -467,18 +445,37 @@ export function useForm<
         dispatch({ id: "Form.Change", key, value });
 
         if (config.validationStrategy === "onChange") {
-          dispatch({ id: "Form.Validate", key });
+          validateFormField(key);
         }
       },
       onBlur: () => {
         dispatch({ id: "Form.Blur", key });
 
         if (config.validationStrategy === "onBlur") {
-          dispatch({ id: "Form.Validate", key });
+          validateFormField(key);
         }
       },
     }),
-    [config.validationStrategy, state.form],
+    [config.validationStrategy, state.form, validateFormField],
+  );
+
+  const validateFieldArrayField = useCallback(
+    <K extends keyof FieldArrayValues>(index: number, key: K) => {
+      if (isExtendedConfig(config)) {
+        const schema = config.fieldArray.validators(fieldArrayValues, formValues);
+        const validator = schema[key] as Validator<FieldArrayValues[K], unknown> | null;
+
+        validator?.(fieldArrayValues[index][key]).then((result) => {
+          dispatch({
+            id: "FieldArray.SetErrors",
+            index,
+            key,
+            errors: isFailure(result) ? result.failure : null,
+          });
+        });
+      }
+    },
+    [config, fieldArrayValues, formValues],
   );
 
   const fieldStateToProps = useCallback(
@@ -492,18 +489,18 @@ export function useForm<
         dispatch({ id: "FieldArray.Blur", index, key });
 
         if (config.validationStrategy === "onBlur") {
-          dispatch({ id: "FieldArray.Validate", index, key });
+          validateFieldArrayField(index, key);
         }
       },
       onChange: (value) => {
         dispatch({ id: "FieldArray.Change", index, key, value });
 
         if (config.validationStrategy === "onChange") {
-          dispatch({ id: "FieldArray.Validate", index, key });
+          validateFieldArrayField(index, key);
         }
       },
     }),
-    [config.validationStrategy],
+    [config.validationStrategy, validateFieldArrayField],
   );
 
   const makeFieldGroup = useCallback(
@@ -618,21 +615,21 @@ export function useForm<
       return;
     }
 
-    const formValidationResult = validate(formValues, config.validators(formValues));
+    validateForm(formValues, config.validators(formValues)).then((result) => {
+      if (isFailure(result)) {
+        propagateFormErrors(result.failure);
 
-    if (isFailure(formValidationResult)) {
-      propagateFormErrors(formValidationResult.failure);
+        if (onSubmit instanceof Function) return;
 
-      if (onSubmit instanceof Function) return;
+        onSubmit.onFailure();
+      } else {
+        disableForm();
 
-      onSubmit.onFailure();
-    } else {
-      disableForm();
-
-      (onSubmit instanceof Function ? onSubmit : onSubmit.onSuccess)(
-        formValidationResult.success,
-      ).finally(enableForm);
-    }
+        (onSubmit instanceof Function ? onSubmit : onSubmit.onSuccess)(result.success).finally(
+          enableForm,
+        );
+      }
+    });
   }
 
   function handleSubmitExtended(
@@ -649,7 +646,7 @@ export function useForm<
       | OnSubmitExtendedMatch<Values, Schema, FieldArrayValues, FieldArraySchema>,
   ): void {
     if (isExtendedConfig(config)) {
-      const formValidationResult = validate(
+      const formValidationResult = validateForm(
         formValues,
         config.form.validators(formValues, fieldArrayValues),
       );
@@ -658,26 +655,30 @@ export function useForm<
         config.fieldArray.validators(fieldArrayValues, formValues),
       );
 
-      if (isSuccess(formValidationResult) && isSuccess(fieldArrayValidationResult)) {
-        disableForm();
+      Promise.all([formValidationResult, fieldArrayValidationResult]).then(
+        ([formValidationResult, fieldArrayValidationResult]) => {
+          if (isSuccess(formValidationResult) && isSuccess(fieldArrayValidationResult)) {
+            disableForm();
 
-        (onSubmit instanceof Function ? onSubmit : onSubmit.onSuccess)(
-          formValidationResult.success,
-          fieldArrayValidationResult.success,
-        ).finally(enableForm);
-      } else {
-        if (isFailure(formValidationResult)) {
-          propagateFormErrors(formValidationResult.failure);
-        }
+            (onSubmit instanceof Function ? onSubmit : onSubmit.onSuccess)(
+              formValidationResult.success,
+              fieldArrayValidationResult.success,
+            ).finally(enableForm);
+          } else {
+            if (isFailure(formValidationResult)) {
+              propagateFormErrors(formValidationResult.failure);
+            }
 
-        if (isFailure(fieldArrayValidationResult)) {
-          propagateFieldArrayErrors(fieldArrayValidationResult.failure);
-        }
+            if (isFailure(fieldArrayValidationResult)) {
+              propagateFieldArrayErrors(fieldArrayValidationResult.failure);
+            }
 
-        if (onSubmit instanceof Function) return;
+            if (onSubmit instanceof Function) return;
 
-        onSubmit.onFailure();
-      }
+            onSubmit.onFailure();
+          }
+        },
+      );
     }
   }
 

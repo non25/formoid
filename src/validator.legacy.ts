@@ -1,16 +1,16 @@
-import { NonEmptyArray, isNonEmpty, of } from "./utils/Array";
+import { isNonEmpty, NonEmptyArray } from "./utils/Array";
 import { Predicate, Refinement } from "./utils/Predicate";
 import {
-  Result,
   failure,
+  flatMap,
   isFailure,
-  isSuccess,
   map,
+  Result,
   fromPredicate as resultFromPredicate,
   success,
 } from "./utils/Result";
 
-export type Validator<I, O> = (input: I) => Promise<Result<NonEmptyArray<string>, O>>;
+export type Validator<I, O> = (input: I) => Result<NonEmptyArray<string>, O>;
 
 export function fromPredicate<A, B extends A>(
   predicate: Refinement<A, B>,
@@ -19,23 +19,8 @@ export function fromPredicate<A, B extends A>(
 
 export function fromPredicate<A>(predicate: Predicate<A>, message: string): Validator<A, A>;
 
-export function fromPredicate<A>(predicate: Predicate<A>, message: string) {
-  return function (input: A) {
-    return Promise.resolve(resultFromPredicate(predicate, () => of(message))(input));
-  };
-}
-
-export function tryCatch<I, A, O>(
-  action: (input: I) => Promise<A>,
-  { onFailure, onSuccess }: { onFailure: (value: unknown) => string; onSuccess: (value: A) => O },
-): Validator<I, O> {
-  return async function (input: I) {
-    try {
-      return success(onSuccess(await action(input)));
-    } catch (issue) {
-      return failure(of(onFailure(issue)));
-    }
-  };
+export function fromPredicate<A>(predicate: Predicate<A>, message: string): Validator<A, A> {
+  return resultFromPredicate(predicate, () => [message]);
 }
 
 export function transform<I, A, B>(f: (a: A) => B): (validator: Validator<I, A>) => Validator<I, B>;
@@ -44,18 +29,14 @@ export function transform<I, A, B>(f: (a: A) => B, validator: Validator<I, A>): 
 
 export function transform<I, A, B>(f: (a: A) => B, validator?: Validator<I, A>) {
   if (validator !== undefined) {
-    return async (input: I) => Promise.resolve(map(f, await validator(input)));
+    return (input: I) => map(f, validator(input));
   }
 
   return (validator: Validator<I, A>) => transform(f, validator);
 }
 
-function flatMap<A, B>(result: ReturnType<Validator<unknown, A>>, f: Validator<A, B>) {
-  return result.then((r) => (isSuccess(r) ? f(r.success) : failure(r.failure)));
-}
-
 export function chain<I, A, O>(ao: Validator<A, O>): (ia: Validator<I, A>) => Validator<I, O> {
-  return (ia) => (input) => flatMap(ia(input), ao);
+  return (ia) => (input) => flatMap(ao, ia(input));
 }
 
 /**
@@ -134,8 +115,8 @@ export function sequence(
 ): Validator<unknown, unknown> {
   return function (input) {
     return validators.reduce(
-      flatMap,
-      Promise.resolve(success(input)) as ReturnType<Validator<unknown, unknown>>,
+      (result, validator) => flatMap(validator, result),
+      success(input) as ReturnType<Validator<unknown, unknown>>,
     );
   };
 }
@@ -213,10 +194,12 @@ export function parallel<I, O>(
 export function parallel<I, O>(
   ...validators: NonEmptyArray<Validator<I, O>>
 ): Validator<I, unknown> {
-  return async function (input) {
-    const failures = (await Promise.all(validators.map((validator) => validator(input)))).flatMap(
-      (result) => (isFailure(result) ? result.failure : []),
-    );
+  return (input) => {
+    const failures = validators.reduce((failures, validator) => {
+      const result = validator(input);
+
+      return isFailure(result) ? failures.concat(result.failure) : failures;
+    }, [] as Array<string>);
 
     return isNonEmpty(failures) ? failure(failures) : success(input);
   };
@@ -253,12 +236,9 @@ export function validateIf<I, O>(
 ): Validator<I, I | O>;
 
 export function validateIf<I, O>(predicate: Predicate<I>, innerValidator: Validator<I, O>) {
-  return (input: I) => (predicate(input) ? innerValidator(input) : Promise.resolve(success(input)));
+  return (input: I) => (predicate(input) ? innerValidator(input) : success(null));
 }
 
-/**
- * Basic validators
- */
 export function min<T extends number>(min: number, message: string): Validator<T, T> {
   return fromPredicate((value: T) => value >= min, message);
 }

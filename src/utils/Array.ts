@@ -5,6 +5,8 @@ export interface NonEmptyArray<A> extends Array<A> {
   0: A;
 }
 
+export const of = <A>(value: A) => [value] satisfies NonEmptyArray<A>;
+
 export function isNonEmpty<A>(as: Array<A>): as is NonEmptyArray<A> {
   return as.length > 0;
 }
