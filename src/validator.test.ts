@@ -30,11 +30,11 @@ describe("validator", () => {
 
     [chainValidator, sequenceValidator].forEach((validator) => {
       it("should chain multiple validators", () => {
-        expect(validator("Something")).toEqual(success("Something"));
-        expect(validator(null)).toEqual(failure(["Value should be defined!"]));
-        expect(validator("")).toEqual(failure(["Value should not be empty!"]));
-        expect(validator("a")).toEqual(failure(["Value should be >= 8 chars long!"]));
-        expect(validator("aaaaaaaaaaaaaaaaa")).toEqual(
+        expect(validator("Something")).resolves.toEqual(success("Something"));
+        expect(validator(null)).resolves.toEqual(failure(["Value should be defined!"]));
+        expect(validator("")).resolves.toEqual(failure(["Value should not be empty!"]));
+        expect(validator("a")).resolves.toEqual(failure(["Value should be >= 8 chars long!"]));
+        expect(validator("aaaaaaaaaaaaaaaaa")).resolves.toEqual(
           failure(["Value should be <= 16 chars long!"]),
         );
       });
@@ -52,12 +52,14 @@ describe("validator", () => {
         transform((value) => value.split("").map((char) => char.charCodeAt(0))),
       );
 
-      expect(validator("abcdefgh")).toEqual(success([65, 66, 67, 68, 69, 70, 71, 72]));
-      expect(validator(null)).toEqual(failure(["Value should be defined!"]));
-      expect(validator("")).toEqual(failure(["Value should not be empty!"]));
-      expect(validator("   ")).toEqual(failure(["Value should not be empty!"]));
-      expect(validator("a")).toEqual(failure(["Value should be between [8, 16] chars long!"]));
-      expect(validator("aaaaaaaaaaaaaaaaa")).toEqual(
+      expect(validator("abcdefgh")).resolves.toEqual(success([65, 66, 67, 68, 69, 70, 71, 72]));
+      expect(validator(null)).resolves.toEqual(failure(["Value should be defined!"]));
+      expect(validator("")).resolves.toEqual(failure(["Value should not be empty!"]));
+      expect(validator("   ")).resolves.toEqual(failure(["Value should not be empty!"]));
+      expect(validator("a")).resolves.toEqual(
+        failure(["Value should be between [8, 16] chars long!"]),
+      );
+      expect(validator("aaaaaaaaaaaaaaaaa")).resolves.toEqual(
         failure(["Value should be between [8, 16] chars long!"]),
       );
     });
@@ -72,8 +74,8 @@ describe("validator", () => {
         match(/(?=.*\d)/, "Password must contain at least 1 digit!"),
       );
 
-      expect(validator("Password123")).toEqual(success("Password123"));
-      expect(validator("")).toEqual(
+      expect(validator("Password123")).resolves.toEqual(success("Password123"));
+      expect(validator("")).resolves.toEqual(
         failure([
           "Password length must be between 8 and 64 chars!",
           "Password must contain at least 1 uppercase letter!",
@@ -81,7 +83,7 @@ describe("validator", () => {
           "Password must contain at least 1 digit!",
         ]),
       );
-      expect(validator("   ")).toEqual(
+      expect(validator("   ")).resolves.toEqual(
         failure([
           "Password length must be between 8 and 64 chars!",
           "Password must contain at least 1 uppercase letter!",
@@ -89,20 +91,20 @@ describe("validator", () => {
           "Password must contain at least 1 digit!",
         ]),
       );
-      expect(validator("A")).toEqual(
+      expect(validator("A")).resolves.toEqual(
         failure([
           "Password length must be between 8 and 64 chars!",
           "Password must contain at least 1 lowercase letter!",
           "Password must contain at least 1 digit!",
         ]),
       );
-      expect(validator("Aa")).toEqual(
+      expect(validator("Aa")).resolves.toEqual(
         failure([
           "Password length must be between 8 and 64 chars!",
           "Password must contain at least 1 digit!",
         ]),
       );
-      expect(validator("Aa1")).toEqual(
+      expect(validator("Aa1")).resolves.toEqual(
         failure(["Password length must be between 8 and 64 chars!"]),
       );
     });

@@ -13,29 +13,29 @@ describe("Form validation", () => {
         confirmPassword: "Password123",
       };
 
-      expect(result(correctValues)).toEqual(success(correctValues));
-      expect(result({ name: "", password: "", confirmPassword: "" })).toEqual(
+      expect(result(correctValues)).resolves.toEqual(success(correctValues));
+      expect(result({ name: "", password: "", confirmPassword: "" })).resolves.toEqual(
         failure({
           name: ["Value should be a non-blank string!"],
           password: ["Value should be a non-blank string!"],
           confirmPassword: ["Value should be a non-blank string!"],
         }),
       );
-      expect(result({ name: "   ", password: "   ", confirmPassword: "   " })).toEqual(
+      expect(result({ name: "   ", password: "   ", confirmPassword: "   " })).resolves.toEqual(
         failure({
           name: ["Value should be a non-blank string!"],
           password: ["Value should be a non-blank string!"],
           confirmPassword: ["Value should be a non-blank string!"],
         }),
       );
-      expect(result({ name: "Hello", password: "", confirmPassword: "" })).toEqual(
+      expect(result({ name: "Hello", password: "", confirmPassword: "" })).resolves.toEqual(
         failure({
           name: null,
           password: ["Value should be a non-blank string!"],
           confirmPassword: ["Value should be a non-blank string!"],
         }),
       );
-      expect(result({ name: "Hello", password: "aaa", confirmPassword: "aaa" })).toEqual(
+      expect(result({ name: "Hello", password: "aaa", confirmPassword: "aaa" })).resolves.toEqual(
         failure({
           name: null,
           password: [
@@ -46,7 +46,9 @@ describe("Form validation", () => {
           confirmPassword: null,
         }),
       );
-      expect(result({ name: "Hello", password: "Admin123", confirmPassword: "aaa" })).toEqual(
+      expect(
+        result({ name: "Hello", password: "Admin123", confirmPassword: "aaa" }),
+      ).resolves.toEqual(
         failure({
           name: null,
           password: null,
