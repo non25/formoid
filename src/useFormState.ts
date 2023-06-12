@@ -9,7 +9,7 @@ import {
   getValues,
   initializeForm,
   updateValues,
-} from "./utils/Form";
+} from "./Form";
 
 export function useFormState<T>(initialState: FormState<T>) {
   const [state, setState] = useState(initialState);
@@ -45,6 +45,18 @@ export function useFormState<T>(initialState: FormState<T>) {
     [values],
   );
 
+  const toggle = useCallback(
+    (action: "enable" | "disable") => {
+      for (const key in values) {
+        if (action === "enable") {
+          enable(key);
+        } else {
+          disable(key);
+        }
+      }
+    },
+    [disable, enable, values],
+  );
   const propagateErrors = useCallback(
     (errors: FormErrors<T>): void => {
       for (const key in errors) setErrors(key, errors[key]);
@@ -67,5 +79,6 @@ export function useFormState<T>(initialState: FormState<T>) {
     setValues,
 
     propagateErrors,
+    toggle,
   };
 }

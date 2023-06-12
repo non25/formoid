@@ -1,5 +1,5 @@
-import { NonEmptyArray, isNonEmpty, of } from "./utils/Array";
-import { Predicate, Refinement } from "./utils/Predicate";
+import { NonEmptyArray, isNonEmpty, of } from "./Array";
+import { Predicate, Refinement } from "./Predicate";
 import {
   Result,
   failure,
@@ -8,7 +8,7 @@ import {
   map,
   fromPredicate as resultFromPredicate,
   success,
-} from "./utils/Result";
+} from "./Result";
 
 export type Validator<I, O> = (input: I) => Promise<Result<NonEmptyArray<string>, O>>;
 

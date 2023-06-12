@@ -1,6 +1,6 @@
-import { validateForm } from "./form-validation";
+import { validateForm } from "./Form";
+import { failure, success } from "./Result";
 import { LoginFormValues, loginSchema } from "./test-utils";
-import { failure, success } from "./utils/Result";
 
 describe("Form validation", () => {
   describe("validate", () => {

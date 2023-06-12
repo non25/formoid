@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from "react";
-import { deleteAt, modifyAt } from "./utils/Array";
+import { deleteAt, modifyAt } from "./Array";
 import {
   FormErrors,
   FormState,
@@ -10,7 +10,7 @@ import {
   getValues,
   initializeForm,
   updateValues,
-} from "./utils/Form";
+} from "./Form";
 
 type Params<T> = {
   initialState: Array<FormState<T>>;
@@ -54,6 +54,20 @@ export function useFieldArrayState<T>({ initialState, initialGroupState }: Param
     setState(modifyAt(index, (group) => updateValues(group, update(getValues(group)))));
   }, []);
 
+  const toggle = useCallback(
+    (action: "enable" | "disable") => {
+      for (const [index] of values.entries()) {
+        for (const key in values[index]) {
+          if (action === "enable") {
+            enable(index, key);
+          } else {
+            disable(index, key);
+          }
+        }
+      }
+    },
+    [disable, enable, values],
+  );
   const propagateErrors = useCallback(
     (errors: Array<FormErrors<T> | null>): void => {
       for (const [index, groupErrors] of errors.entries()) {
@@ -88,5 +102,6 @@ export function useFieldArrayState<T>({ initialState, initialGroupState }: Param
     setValues,
 
     propagateErrors,
+    toggle,
   };
 }

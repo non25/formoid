@@ -1,5 +1,5 @@
+import { failure, success } from "./Result";
 import { nonEmptyStringValidator, pipe } from "./test-utils";
-import { failure, success } from "./utils/Result";
 import {
   chain,
   defined,

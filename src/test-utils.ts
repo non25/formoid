@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 /** Importing test utilities is only permitted within test files. */
-import { ValidationSchema } from "./form-validation";
+import { ValidationSchema } from "./Form";
 import {
   Validator,
   chain,
