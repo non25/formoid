@@ -16,24 +16,26 @@ import { useFormState } from "./useFormState";
 
 type Overwrite<T, U> = Pick<T, Exclude<keyof T, keyof U>> & U;
 
+type CompoundValues<A, B> = { form: A; fieldArray: Array<B> };
+
 type UseCompoundFormConfig<A, B extends ValidationSchema<A>, C, D extends ValidationSchema<C>> = {
   form: Overwrite<
     UseFormConfig<A, B>,
     {
-      validators: (values: { form: A; fieldArray: Array<C> }) => B;
+      validators: (values: CompoundValues<A, C>) => B;
     }
   >;
   fieldArray: Overwrite<
     UseFieldArrayConfig<C, D>,
     {
-      validators: (values: { form: A; fieldArray: Array<C> }) => D;
+      validators: (values: CompoundValues<A, C>) => D;
     }
   >;
 };
 
-type OnSubmitCompound<A, B extends ValidationSchema<A>, C, D extends ValidationSchema<C>> = {
-  (form: ValidatedValues<A, B>, fieldArray: Array<ValidatedValues<C, D>>): Promise<unknown>;
-};
+type OnSubmitCompound<A, B extends ValidationSchema<A>, C, D extends ValidationSchema<C>> = (
+  values: CompoundValues<ValidatedValues<A, B>, ValidatedValues<C, D>>,
+) => Promise<unknown>;
 
 type OnSubmitCompoundMatch<A, B extends ValidationSchema<A>, C, D extends ValidationSchema<C>> = {
   onSuccess: OnSubmitCompound<A, B, C, D>;
@@ -63,7 +65,7 @@ export function useCompoundForm<
   const form = useFormState(initializeForm(config.form.initialValues));
   const fieldArray = useFieldArrayState(config.fieldArray.initialValues.map(initializeForm));
 
-  const values = { form: form.values, fieldArray: fieldArray.values };
+  const values: CompoundValues<A, C> = { form: form.values, fieldArray: fieldArray.values };
 
   const fieldProps = makeFieldProps({
     form,
@@ -93,7 +95,9 @@ export function useCompoundForm<
       if (isSuccess(formResult) && isSuccess(fieldArrayResult)) {
         const submit = onSubmit instanceof Function ? onSubmit : onSubmit.onSuccess;
 
-        submit(formResult.success, fieldArrayResult.success).finally(() => toggle("enable"));
+        submit({ form: formResult.success, fieldArray: fieldArrayResult.success }).finally(() =>
+          toggle("enable"),
+        );
       } else {
         if (isFailure(formResult)) {
           form.propagateErrors(formResult.failure);
