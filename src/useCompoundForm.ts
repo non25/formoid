@@ -61,10 +61,7 @@ export function useCompoundForm<
   D extends ValidationSchema<C>,
 >(config: UseCompoundFormConfig<A, B, C, D>): UseCompoundFormReturn<A, B, C, D> {
   const form = useFormState(initializeForm(config.form.initialValues));
-  const fieldArray = useFieldArrayState({
-    initialGroupState: initializeForm(config.fieldArray.defaultValues),
-    initialState: config.fieldArray.initialValues.map(initializeForm),
-  });
+  const fieldArray = useFieldArrayState(config.fieldArray.initialValues.map(initializeForm));
 
   const values = { form: form.values, fieldArray: fieldArray.values };
 

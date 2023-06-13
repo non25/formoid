@@ -15,14 +15,13 @@ import { isFailure } from "./Result";
 import { useFieldArrayState } from "./useFieldArrayState";
 
 export type UseFieldArrayConfig<T, S extends ValidationSchema<T>> = {
-  defaultValues: T;
   initialValues: Array<T>;
   validationStrategy: ValidationStrategy;
   validators: (values: Array<T>) => S;
 };
 
 export type UseFieldArrayReturn<T, S extends ValidationSchema<T>> = {
-  append: () => void;
+  append: (values: T) => void;
   errors: Array<FormErrors<T>>;
   groups: Array<FieldGroup<T>>;
   handleReset: (update?: Update<Array<T>>) => void;
@@ -35,15 +34,11 @@ export type UseFieldArrayReturn<T, S extends ValidationSchema<T>> = {
 };
 
 export function useFieldArray<T extends Record<string, unknown>, S extends ValidationSchema<T>>({
-  defaultValues,
   initialValues,
   validationStrategy,
   validators,
 }: UseFieldArrayConfig<T, S>): UseFieldArrayReturn<T, S> {
-  const fieldArray = useFieldArrayState({
-    initialState: initialValues.map(initializeForm),
-    initialGroupState: initializeForm(defaultValues),
-  });
+  const fieldArray = useFieldArrayState(initialValues.map(initializeForm));
 
   const fieldGroups = makeFieldGroups({
     fieldArray,

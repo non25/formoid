@@ -12,20 +12,15 @@ import {
   updateValues,
 } from "./Form";
 
-type Params<T> = {
-  initialState: Array<FormState<T>>;
-  initialGroupState: FormState<T> | null;
-};
-
-export function useFieldArrayState<T>({ initialState, initialGroupState }: Params<T>) {
+export function useFieldArrayState<T>(initialState: Array<FormState<T>>) {
   const [state, setState] = useState(initialState);
 
   const errors = useMemo(() => state.map(getErrors), [state]);
   const values = useMemo(() => state.map(getValues), [state]);
 
-  const append = useCallback(() => {
-    setState((state) => (initialGroupState ? state.concat(initialGroupState) : state));
-  }, [initialGroupState]);
+  const append = useCallback((values: T) => {
+    setState((state) => state.concat(initializeForm(values)));
+  }, []);
   const blur = useCallback(<K extends keyof T>(index: number, key: K) => {
     setState(modifyAt(index, (group) => formStateManager(group).blur(key)));
   }, []);

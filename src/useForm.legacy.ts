@@ -124,7 +124,7 @@ type UseFormReturnExtended<
 > = {
   form: Omit<UseFormReturn<Values, Schema>, "handleSubmit" | "handleReset" | "isSubmitting">;
   fieldArray: {
-    append: () => void;
+    append: (values: FieldArrayValues) => void;
     errors: Array<FormErrors<FieldArrayValues>>;
     groups: Array<FieldGroup<FieldArrayValues>>;
     remove: (index: number) => void;
@@ -166,15 +166,7 @@ export function useForm<
   );
 
   const fieldArray = useFieldArrayState(
-    isExtendedConfig(config)
-      ? {
-          initialState: config.fieldArray.initialValues.map(initializeForm),
-          initialGroupState: initializeForm(config.fieldArray.defaultValues),
-        }
-      : {
-          initialState: [],
-          initialGroupState: null,
-        },
+    isExtendedConfig(config) ? config.fieldArray.initialValues.map(initializeForm) : [],
   );
 
   const formValidationSchema: Schema = isExtendedConfig(config)
