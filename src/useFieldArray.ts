@@ -7,7 +7,6 @@ import {
   Update,
   ValidationSchema,
   ValidationStrategy,
-  initializeForm,
   makeFieldGroups,
   validateFieldArray,
 } from "./Form";
@@ -38,7 +37,7 @@ export function useFieldArray<T extends Record<string, unknown>, S extends Valid
   validationStrategy,
   validators,
 }: UseFieldArrayConfig<T, S>): UseFieldArrayReturn<T, S> {
-  const fieldArray = useFieldArrayState(initialValues.map(initializeForm));
+  const fieldArray = useFieldArrayState(initialValues);
 
   const fieldGroups = makeFieldGroups({
     fieldArray,

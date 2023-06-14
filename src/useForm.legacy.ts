@@ -9,7 +9,6 @@ import {
   ValidatedValues,
   ValidationSchema,
   ValidationStrategy,
-  initializeForm,
   validateFieldArray,
   validateForm,
 } from "./Form";
@@ -162,11 +161,11 @@ export function useForm<
     | UseFormConfigExtended<Values, Schema, FieldArrayValues, FieldArraySchema>,
 ) {
   const form = useFormState(
-    initializeForm(isExtendedConfig(config) ? config.form.initialValues : config.initialValues),
+    isExtendedConfig(config) ? config.form.initialValues : config.initialValues,
   );
 
   const fieldArray = useFieldArrayState(
-    isExtendedConfig(config) ? config.fieldArray.initialValues.map(initializeForm) : [],
+    isExtendedConfig(config) ? config.fieldArray.initialValues : [],
   );
 
   const formValidationSchema: Schema = isExtendedConfig(config)

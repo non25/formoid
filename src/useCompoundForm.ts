@@ -2,7 +2,6 @@ import { useState } from "react";
 import {
   ValidatedValues,
   ValidationSchema,
-  initializeForm,
   makeFieldGroups,
   makeFieldProps,
   validateFieldArray,
@@ -16,66 +15,104 @@ import { useFormState } from "./useFormState";
 
 type Overwrite<T, U> = Pick<T, Exclude<keyof T, keyof U>> & U;
 
-type CompoundValues<A, B> = { form: A; fieldArray: Array<B> };
+type CompoundValues<Values, FieldArrayValues> = {
+  form: Values;
+  fieldArray: Array<FieldArrayValues>;
+};
 
-type UseCompoundFormConfig<A, B extends ValidationSchema<A>, C, D extends ValidationSchema<C>> = {
+type UseCompoundFormConfig<
+  Values,
+  Schema extends ValidationSchema<Values>,
+  FieldArrayValues,
+  FieldArraySchema extends ValidationSchema<FieldArrayValues>,
+> = {
   form: Overwrite<
-    UseFormConfig<A, B>,
+    UseFormConfig<Values, Schema>,
     {
-      validators: (values: CompoundValues<A, C>) => B;
+      validators: (values: CompoundValues<Values, FieldArrayValues>) => Schema;
     }
   >;
   fieldArray: Overwrite<
-    UseFieldArrayConfig<C, D>,
+    UseFieldArrayConfig<FieldArrayValues, FieldArraySchema>,
     {
-      validators: (values: CompoundValues<A, C>) => D;
+      validators: (values: CompoundValues<Values, FieldArrayValues>) => FieldArraySchema;
     }
   >;
 };
 
-type OnSubmitCompound<A, B extends ValidationSchema<A>, C, D extends ValidationSchema<C>> = (
-  values: CompoundValues<ValidatedValues<A, B>, ValidatedValues<C, D>>,
+type OnSubmitCompound<
+  Values,
+  Schema extends ValidationSchema<Values>,
+  FieldArrayValues,
+  FieldArraySchema extends ValidationSchema<FieldArrayValues>,
+> = (
+  values: CompoundValues<
+    ValidatedValues<Values, Schema>,
+    ValidatedValues<FieldArrayValues, FieldArraySchema>
+  >,
 ) => Promise<unknown>;
 
-type OnSubmitCompoundMatch<A, B extends ValidationSchema<A>, C, D extends ValidationSchema<C>> = {
-  onSuccess: OnSubmitCompound<A, B, C, D>;
+type OnSubmitCompoundMatch<
+  Values,
+  Schema extends ValidationSchema<Values>,
+  FieldArrayValues,
+  FieldArraySchema extends ValidationSchema<FieldArrayValues>,
+> = {
+  onSuccess: OnSubmitCompound<Values, Schema, FieldArrayValues, FieldArraySchema>;
   onFailure: () => unknown;
 };
 
-type HandleSubmitCompound<A, B extends ValidationSchema<A>, C, D extends ValidationSchema<C>> = {
-  (onSubmit: OnSubmitCompound<A, B, C, D>): void;
-  (onSubmit: OnSubmitCompoundMatch<A, B, C, D>): void;
+type HandleSubmitCompound<
+  Values,
+  Schema extends ValidationSchema<Values>,
+  FieldArrayValues,
+  FieldArraySchema extends ValidationSchema<FieldArrayValues>,
+> = {
+  (onSubmit: OnSubmitCompound<Values, Schema, FieldArrayValues, FieldArraySchema>): void;
+  (onSubmit: OnSubmitCompoundMatch<Values, Schema, FieldArrayValues, FieldArraySchema>): void;
 };
 
 type RedundantFields = "handleSubmit" | "isSubmitting";
 
-type UseCompoundFormReturn<A, B extends ValidationSchema<A>, C, D extends ValidationSchema<C>> = {
-  form: Omit<UseFormReturn<A, B>, RedundantFields>;
-  fieldArray: Omit<UseFieldArrayReturn<C, D>, RedundantFields>;
-  handleSubmit: HandleSubmitCompound<A, B, C, D>;
+type UseCompoundFormReturn<
+  Values,
+  Schema extends ValidationSchema<Values>,
+  FieldArrayValues,
+  FieldArraySchema extends ValidationSchema<FieldArrayValues>,
+> = {
+  form: Omit<UseFormReturn<Values, Schema>, RedundantFields>;
+  fieldArray: Omit<UseFieldArrayReturn<FieldArrayValues, FieldArraySchema>, RedundantFields>;
+  handleSubmit: HandleSubmitCompound<Values, Schema, FieldArrayValues, FieldArraySchema>;
   isSubmitting: boolean;
 };
 
 export function useCompoundForm<
-  A extends Record<string, unknown>,
-  B extends ValidationSchema<A>,
-  C extends Record<string, unknown>,
-  D extends ValidationSchema<C>,
->(config: UseCompoundFormConfig<A, B, C, D>): UseCompoundFormReturn<A, B, C, D> {
-  const form = useFormState(initializeForm(config.form.initialValues));
-  const fieldArray = useFieldArrayState(config.fieldArray.initialValues.map(initializeForm));
+  Values extends Record<string, unknown>,
+  Schema extends ValidationSchema<Values>,
+  FieldArrayValues extends Record<string, unknown>,
+  FieldArraySchema extends ValidationSchema<FieldArrayValues>,
+>(
+  config: UseCompoundFormConfig<Values, Schema, FieldArrayValues, FieldArraySchema>,
+): UseCompoundFormReturn<Values, Schema, FieldArrayValues, FieldArraySchema> {
+  const { form: formConfig, fieldArray: fieldArrayConfig } = config;
 
-  const values: CompoundValues<A, C> = { form: form.values, fieldArray: fieldArray.values };
+  const form = useFormState(formConfig.initialValues);
+  const fieldArray = useFieldArrayState(fieldArrayConfig.initialValues);
+
+  const values: CompoundValues<Values, FieldArrayValues> = {
+    form: form.values,
+    fieldArray: fieldArray.values,
+  };
 
   const fieldProps = makeFieldProps({
     form,
-    schema: config.form.validators(values),
-    validationStrategy: config.form.validationStrategy,
+    schema: formConfig.validators(values),
+    validationStrategy: formConfig.validationStrategy,
   });
   const fieldGroups = makeFieldGroups({
     fieldArray,
-    schema: config.fieldArray.validators(values),
-    validationStrategy: config.fieldArray.validationStrategy,
+    schema: fieldArrayConfig.validators(values),
+    validationStrategy: fieldArrayConfig.validationStrategy,
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -86,11 +123,13 @@ export function useCompoundForm<
     fieldArray.toggle(action);
   }
 
-  const handleSubmit: HandleSubmitCompound<A, B, C, D> = (onSubmit) => {
+  const handleSubmit: HandleSubmitCompound<Values, Schema, FieldArrayValues, FieldArraySchema> = (
+    onSubmit,
+  ) => {
     toggle("disable");
     Promise.all([
-      validateForm(form.values, config.form.validators(values)),
-      validateFieldArray(fieldArray.values, config.fieldArray.validators(values)),
+      validateForm(form.values, formConfig.validators(values)),
+      validateFieldArray(fieldArray.values, fieldArrayConfig.validators(values)),
     ]).then(([formResult, fieldArrayResult]) => {
       if (isSuccess(formResult) && isSuccess(fieldArrayResult)) {
         const submit = onSubmit instanceof Function ? onSubmit : onSubmit.onSuccess;

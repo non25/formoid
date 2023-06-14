@@ -7,17 +7,16 @@ import {
   Update,
   ValidationSchema,
   ValidationStrategy,
-  initializeForm,
   makeFieldProps,
   validateForm,
 } from "./Form";
 import { isFailure } from "./Result";
 import { useFormState } from "./useFormState";
 
-export type UseFormConfig<Values, Schema extends ValidationSchema<Values>> = {
-  initialValues: Values;
+export type UseFormConfig<T, S extends ValidationSchema<T>> = {
+  initialValues: T;
   validationStrategy: ValidationStrategy;
-  validators: (values: Values) => Schema;
+  validators: (values: T) => S;
 };
 
 export type UseFormReturn<T, S extends ValidationSchema<T>> = {
@@ -36,13 +35,9 @@ export function useForm<T extends Record<string, unknown>, S extends ValidationS
   validationStrategy,
   validators,
 }: UseFormConfig<T, S>): UseFormReturn<T, S> {
-  const form = useFormState(initializeForm(initialValues));
+  const form = useFormState(initialValues);
 
-  const fieldProps = makeFieldProps({
-    form,
-    schema: validators(form.values),
-    validationStrategy,
-  });
+  const fieldProps = makeFieldProps({ form, schema: validators(form.values), validationStrategy });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
