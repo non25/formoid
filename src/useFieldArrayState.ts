@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { deleteAt, modifyAt } from "./Array";
 import {
   FormErrors,
@@ -12,7 +12,8 @@ import {
 } from "./Form";
 
 export function useFieldArrayState<T>(initialValues: Array<T>) {
-  const [state, setState] = useState(initialValues.map(initializeForm));
+  const persistentInitialValues = useRef(initialValues);
+  const [state, setState] = useState(persistentInitialValues.current.map(initializeForm));
 
   const errors = useMemo(() => state.map(getErrors), [state]);
   const values = useMemo(() => state.map(getValues), [state]);
@@ -37,9 +38,9 @@ export function useFieldArrayState<T>(initialValues: Array<T>) {
   }, []);
   const reset = useCallback(
     (update?: Update<Array<T>>) => {
-      setState((update?.(values) ?? initialValues).map(initializeForm));
+      setState((update?.(values) ?? persistentInitialValues.current).map(initializeForm));
     },
-    [initialValues, values],
+    [values],
   );
   const setErrors: SetFieldArrayErrors<T> = useCallback((index, key, errors) => {
     setState(modifyAt(index, (group) => formStateManager(group).setErrors(key, errors)));

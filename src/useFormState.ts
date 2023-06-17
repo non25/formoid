@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import {
   FormErrors,
   SetErrors,
@@ -11,7 +11,8 @@ import {
 } from "./Form";
 
 export function useFormState<T>(initialValues: T) {
-  const [state, setState] = useState(initializeForm(initialValues));
+  const persistentInitialValues = useRef(initialValues);
+  const [state, setState] = useState(initializeForm(persistentInitialValues.current));
 
   const errors = useMemo(() => getErrors(state), [state]);
   const values = useMemo(() => getValues(state), [state]);
@@ -30,10 +31,9 @@ export function useFormState<T>(initialValues: T) {
   }, []);
   const reset = useCallback(
     (update?: Update<T>): void => {
-      console.log("reset", initialValues);
-      setState(initializeForm(update ? update(values) : initialValues));
+      setState(initializeForm(update ? update(values) : persistentInitialValues.current));
     },
-    [initialValues, values],
+    [values],
   );
   const setErrors: SetErrors<T> = useCallback((key, errors): void => {
     setState((state) => formStateManager(state).setErrors(key, errors));
