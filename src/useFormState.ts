@@ -10,8 +10,8 @@ import {
   updateValues,
 } from "./Form";
 
-export function useFormState<T>(initialState: T) {
-  const [state, setState] = useState(initializeForm(initialState));
+export function useFormState<T>(initialValues: T) {
+  const [state, setState] = useState(initializeForm(initialValues));
 
   const errors = useMemo(() => getErrors(state), [state]);
   const values = useMemo(() => getValues(state), [state]);
@@ -30,9 +30,10 @@ export function useFormState<T>(initialState: T) {
   }, []);
   const reset = useCallback(
     (update?: Update<T>): void => {
-      setState(initializeForm(update ? update(values) : initialState));
+      console.log("reset", initialValues);
+      setState(initializeForm(update ? update(values) : initialValues));
     },
-    [initialState, values],
+    [initialValues, values],
   );
   const setErrors: SetErrors<T> = useCallback((key, errors): void => {
     setState((state) => formStateManager(state).setErrors(key, errors));

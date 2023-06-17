@@ -11,8 +11,8 @@ import {
   updateValues,
 } from "./Form";
 
-export function useFieldArrayState<T>(initialState: Array<T>) {
-  const [state, setState] = useState(initialState.map(initializeForm));
+export function useFieldArrayState<T>(initialValues: Array<T>) {
+  const [state, setState] = useState(initialValues.map(initializeForm));
 
   const errors = useMemo(() => state.map(getErrors), [state]);
   const values = useMemo(() => state.map(getValues), [state]);
@@ -37,9 +37,9 @@ export function useFieldArrayState<T>(initialState: Array<T>) {
   }, []);
   const reset = useCallback(
     (update?: Update<Array<T>>) => {
-      setState((update?.(values) ?? initialState).map(initializeForm));
+      setState((update?.(values) ?? initialValues).map(initializeForm));
     },
-    [initialState, values],
+    [initialValues, values],
   );
   const setErrors: SetFieldArrayErrors<T> = useCallback((index, key, errors) => {
     setState(modifyAt(index, (group) => formStateManager(group).setErrors(key, errors)));
