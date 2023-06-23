@@ -1,4 +1,4 @@
-import { Update, ValidatedValues, ValidationSchema, ValidationStrategy } from "./Form";
+import { FormErrors, Update, ValidatedValues, ValidationSchema, ValidationStrategy } from "./Form";
 import { UseFieldArrayReturn } from "./useFieldArray";
 import { UseFormReturn } from "./useForm";
 import { minLength, transform } from "./validator";
@@ -16,6 +16,10 @@ type CompoundValues<FormValues, FieldArrayValues> = {
 
 type FieldArrayValidationSchema<FieldArrayValues extends FieldArrayValuesConstraint> = {
   [K in keyof FieldArrayValues]: ValidationSchema<FieldArrayValues[K][number]>;
+};
+
+type FieldArrayErrors<FieldArrayValues extends FieldArrayValuesConstraint> = {
+  [K in keyof FieldArrayValues]: Array<FormErrors<FieldArrayValues[K][number]>>;
 };
 
 type Config<
@@ -77,7 +81,10 @@ type OnSubmitMatch<
   FieldArrayValues extends FieldArrayValuesConstraint,
   FieldArraySchema extends FieldArrayValidationSchema<FieldArrayValues>,
 > = {
-  onFailure: () => unknown;
+  onFailure: (
+    errors: CompoundValues<FormErrors<FormValues>, FieldArrayErrors<FieldArrayValues>>,
+    values: CompoundValues<FormValues, FieldArrayValues>,
+  ) => unknown;
   onSuccess: OnSubmit<FormValues, FormSchema, FieldArrayValues, FieldArraySchema>;
 };
 
@@ -155,4 +162,8 @@ export function useTest() {
   });
 
   result.handleSubmit((values) => Promise.resolve(values.form.second));
+  result.handleSubmit({
+    onFailure: (errors, values) => errors.fieldArray.first.map((f) => f.some),
+    onSuccess: () => Promise.resolve(null),
+  });
 }
