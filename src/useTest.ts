@@ -1,27 +1,21 @@
-import {
-  FieldGroup,
-  FieldProps,
-  FormErrors,
-  SetErrors,
-  SetFieldArrayErrors,
-  Update,
-  ValidatedValues,
-  ValidationSchema,
-  ValidationStrategy,
-} from "./Form";
+import { Update, ValidatedValues, ValidationSchema, ValidationStrategy } from "./Form";
+import { UseFieldArrayReturn } from "./useFieldArray";
+import { UseFormReturn } from "./useForm";
 import { minLength, transform } from "./validator";
 
 type FormValuesConstraint = Record<string, unknown>;
 
 type FieldArrayValuesConstraint = Record<string, Array<unknown>>;
 
+type RedundantFields = "handleSubmit" | "isSubmitting";
+
 type CompoundValues<FormValues, FieldArrayValues> = {
   form: FormValues;
   fieldArray: FieldArrayValues;
 };
 
-type FieldArrayValidationSchema<T extends FieldArrayValuesConstraint> = {
-  [K in keyof T]: ValidationSchema<T[K][number]>;
+type FieldArrayValidationSchema<FieldArrayValues extends FieldArrayValuesConstraint> = {
+  [K in keyof FieldArrayValues]: ValidationSchema<FieldArrayValues[K][number]>;
 };
 
 type Config<
@@ -42,28 +36,11 @@ type Config<
   };
 };
 
-type FieldArrayReturn<FieldArrayValues> = {
-  append: (values: FieldArrayValues) => void;
-  errors: Array<FormErrors<FieldArrayValues>>;
-  groups: Array<FieldGroup<FieldArrayValues>>;
-  handleReset: (update?: Update<Array<FieldArrayValues>>) => void;
-  remove: (index: number) => void;
-  setErrors: SetFieldArrayErrors<FieldArrayValues>;
-  setValues: (index: number, update: Update<FieldArrayValues>) => void;
-  values: Array<FieldArrayValues>;
-};
-
-type FieldArray<FieldArrayValues extends FieldArrayValuesConstraint> = {
-  [K in keyof FieldArrayValues]: FieldArrayReturn<FieldArrayValues[K][number]>;
-};
-
-type FormReturn<FormValues> = {
-  errors: FormErrors<FormValues>;
-  fieldProps: <K extends keyof FormValues>(key: K) => FieldProps<FormValues[K]>;
-  handleReset: (update?: Update<FormValues>) => void;
-  setErrors: SetErrors<FormValues>;
-  setValues: (update: Update<FormValues>) => void;
-  values: FormValues;
+type FieldArrayReturn<FieldArrayValues extends FieldArrayValuesConstraint> = {
+  [K in keyof FieldArrayValues]: Omit<
+    UseFieldArrayReturn<FieldArrayValues[K][number], never>,
+    RedundantFields
+  >;
 };
 
 type FieldArrayValidatedValues<
@@ -120,8 +97,8 @@ type Return<
   FieldArrayValues extends FieldArrayValuesConstraint,
   FieldArraySchema extends FieldArrayValidationSchema<FieldArrayValues>,
 > = {
-  fieldArray: FieldArray<FieldArrayValues>;
-  form: FormReturn<FormValues>;
+  fieldArray: FieldArrayReturn<FieldArrayValues>;
+  form: Omit<UseFormReturn<FormValues, never>, RedundantFields>;
   handleReset: (update?: Update<CompoundValues<FormValues, FieldArrayValues>>) => void;
   handleSubmit: HandleSubmit<FormValues, FormSchema, FieldArrayValues, FieldArraySchema>;
   isSubmitting: boolean;
