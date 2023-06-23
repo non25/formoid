@@ -1,6 +1,8 @@
 import {
   FieldGroup,
+  FieldProps,
   FormErrors,
+  SetErrors,
   SetFieldArrayErrors,
   Update,
   ValidatedValues,
@@ -9,64 +11,130 @@ import {
 } from "./Form";
 import { minLength, transform } from "./validator";
 
-type FieldArrayValues = Record<string, Array<unknown>>;
+type FormValuesConstraint = Record<string, unknown>;
 
-export type UseFieldArrayConfig<T, S extends ValidationSchema<T>> = {
-  initialValues: Array<T>;
-  validationStrategy: ValidationStrategy;
-  validators: (values: Array<T>) => S;
+type FieldArrayValuesConstraint = Record<string, Array<unknown>>;
+
+type CompoundValues<FormValues, FieldArrayValues> = {
+  form: FormValues;
+  fieldArray: FieldArrayValues;
 };
 
-export type UseFieldArrayReturn<T> = {
-  append: (values: T) => void;
-  errors: Array<FormErrors<T>>;
-  groups: Array<FieldGroup<T>>;
-  handleReset: (update?: Update<Array<T>>) => void;
-  remove: (index: number) => void;
-  setErrors: SetFieldArrayErrors<T>;
-  setValues: (index: number, update: Update<T>) => void;
-  values: Array<T>;
-};
-
-export type Schema<T extends FieldArrayValues> = {
+type FieldArrayValidationSchema<T extends FieldArrayValuesConstraint> = {
   [K in keyof T]: ValidationSchema<T[K][number]>;
 };
 
-export type Config<T extends FieldArrayValues, S extends Schema<T>> = {
-  initialValues: T;
-  validationStrategy: ValidationStrategy;
-  validators: (values: T) => S;
+type Config<
+  FormValues extends FormValuesConstraint,
+  FormSchema extends ValidationSchema<FormValues>,
+  FieldArrayValues extends FieldArrayValuesConstraint,
+  FieldArraySchema extends FieldArrayValidationSchema<FieldArrayValues>,
+> = {
+  form: {
+    initialValues: FormValues;
+    validationStrategy: ValidationStrategy;
+    validators: (values: CompoundValues<FormValues, FieldArrayValues>) => FormSchema;
+  };
+  fieldArray: {
+    initialValues: FieldArrayValues;
+    validationStrategy: ValidationStrategy;
+    validators: (values: CompoundValues<FormValues, FieldArrayValues>) => FieldArraySchema;
+  };
 };
 
-export type FieldArray<T extends FieldArrayValues> = {
-  [K in keyof T]: UseFieldArrayReturn<T[K][number]>;
+type FieldArrayReturn<FieldArrayValues> = {
+  append: (values: FieldArrayValues) => void;
+  errors: Array<FormErrors<FieldArrayValues>>;
+  groups: Array<FieldGroup<FieldArrayValues>>;
+  handleReset: (update?: Update<Array<FieldArrayValues>>) => void;
+  remove: (index: number) => void;
+  setErrors: SetFieldArrayErrors<FieldArrayValues>;
+  setValues: (index: number, update: Update<FieldArrayValues>) => void;
+  values: Array<FieldArrayValues>;
 };
 
-export type OnSubmitValues<T extends FieldArrayValues, S extends Schema<T>> = {
-  [K in keyof T]: Array<
+type FieldArray<FieldArrayValues extends FieldArrayValuesConstraint> = {
+  [K in keyof FieldArrayValues]: FieldArrayReturn<FieldArrayValues[K][number]>;
+};
+
+type FormReturn<FormValues> = {
+  errors: FormErrors<FormValues>;
+  fieldProps: <K extends keyof FormValues>(key: K) => FieldProps<FormValues[K]>;
+  handleReset: (update?: Update<FormValues>) => void;
+  setErrors: SetErrors<FormValues>;
+  setValues: (update: Update<FormValues>) => void;
+  values: FormValues;
+};
+
+type FieldArrayValidatedValues<
+  FieldArrayValues extends FieldArrayValuesConstraint,
+  FieldArraySchema extends FieldArrayValidationSchema<FieldArrayValues>,
+> = {
+  [K in keyof FieldArrayValues]: Array<
     ValidatedValues<
-      T[K][number],
-      S[K] extends ValidationSchema<T[K][number]> ? S[K] : ValidationSchema<T[K][number]>
+      FieldArrayValues[K][number],
+      FieldArraySchema[K] extends ValidationSchema<FieldArrayValues[K][number]>
+        ? FieldArraySchema[K]
+        : ValidationSchema<FieldArrayValues[K][number]>
     >
   >;
 };
 
-export type OnSubmit<T extends FieldArrayValues, S extends Schema<T>> = {
-  (values: OnSubmitValues<T, S>): Promise<unknown>;
+type OnSubmit<
+  FormValues extends FormValuesConstraint,
+  FormSchema extends ValidationSchema<FormValues>,
+  FieldArrayValues extends FieldArrayValuesConstraint,
+  FieldArraySchema extends FieldArrayValidationSchema<FieldArrayValues>,
+> = {
+  (
+    values: CompoundValues<
+      ValidatedValues<FormValues, FormSchema>,
+      FieldArrayValidatedValues<FieldArrayValues, FieldArraySchema>
+    >,
+  ): Promise<unknown>;
 };
 
-export type HandleSubmit<T extends FieldArrayValues, S extends Schema<T>> = {
-  (onSubmit: OnSubmit<T, S>): void;
+type OnSubmitMatch<
+  FormValues extends FormValuesConstraint,
+  FormSchema extends ValidationSchema<FormValues>,
+  FieldArrayValues extends FieldArrayValuesConstraint,
+  FieldArraySchema extends FieldArrayValidationSchema<FieldArrayValues>,
+> = {
+  onFailure: () => unknown;
+  onSuccess: OnSubmit<FormValues, FormSchema, FieldArrayValues, FieldArraySchema>;
 };
 
-export type Return<T extends FieldArrayValues, S extends Schema<T>> = {
-  fieldArray: FieldArray<T>;
-  handleSubmit: HandleSubmit<T, S>;
+type HandleSubmit<
+  FormValues extends FormValuesConstraint,
+  FormSchema extends ValidationSchema<FormValues>,
+  FieldArrayValues extends FieldArrayValuesConstraint,
+  FieldArraySchema extends FieldArrayValidationSchema<FieldArrayValues>,
+> = {
+  (onSubmit: OnSubmit<FormValues, FormSchema, FieldArrayValues, FieldArraySchema>): void;
+  (onSubmit: OnSubmitMatch<FormValues, FormSchema, FieldArrayValues, FieldArraySchema>): void;
 };
 
-export declare function useCompoundForm<T extends FieldArrayValues, S extends Schema<T>>(
-  config: Config<T, S>,
-): Return<T, S>;
+type Return<
+  FormValues extends FormValuesConstraint,
+  FormSchema extends ValidationSchema<FormValues>,
+  FieldArrayValues extends FieldArrayValuesConstraint,
+  FieldArraySchema extends FieldArrayValidationSchema<FieldArrayValues>,
+> = {
+  fieldArray: FieldArray<FieldArrayValues>;
+  form: FormReturn<FormValues>;
+  handleReset: (update?: Update<CompoundValues<FormValues, FieldArrayValues>>) => void;
+  handleSubmit: HandleSubmit<FormValues, FormSchema, FieldArrayValues, FieldArraySchema>;
+  isSubmitting: boolean;
+};
+
+export declare function useCompoundForm<
+  FormValues extends FormValuesConstraint,
+  FormSchema extends ValidationSchema<FormValues>,
+  FieldArrayValues extends FieldArrayValuesConstraint,
+  FieldArraySchema extends FieldArrayValidationSchema<FieldArrayValues>,
+>(
+  config: Config<FormValues, FormSchema, FieldArrayValues, FieldArraySchema>,
+): Return<FormValues, FormSchema, FieldArrayValues, FieldArraySchema>;
 
 export function useTest() {
   type First = {
@@ -79,22 +147,35 @@ export function useTest() {
   };
 
   const result = useCompoundForm({
-    initialValues: {
-      first: [] as Array<First>,
-      second: [] as Array<Second>,
+    form: {
+      initialValues: {
+        first: "",
+        second: "",
+      },
+      validationStrategy: "onBlur",
+      validators: () => ({
+        first: null,
+        second: transform((value: string) => value.split(""), minLength(4, "4 chars")),
+      }),
     },
-    validationStrategy: "onBlur",
-    validators: (values) => ({
-      first: {
-        some: transform((value: string) => value.split(""), minLength(4, "4 chars")),
-        body: null,
+    fieldArray: {
+      initialValues: {
+        first: [] as Array<First>,
+        second: [] as Array<Second>,
       },
-      second: {
-        any: null,
-        thing: null,
-      },
-    }),
+      validationStrategy: "onBlur",
+      validators: () => ({
+        first: {
+          some: transform((value: string) => value.split(""), minLength(4, "4 chars")),
+          body: null,
+        },
+        second: {
+          any: null,
+          thing: null,
+        },
+      }),
+    },
   });
 
-  result.handleSubmit((values) => Promise.resolve(values.first.map((v) => v.some)));
+  result.handleSubmit((values) => Promise.resolve(values.form.second));
 }
