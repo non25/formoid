@@ -19,3 +19,7 @@ export function mapValues<T extends Record<string, unknown>, B>(
 
   return result;
 }
+
+export function entries<T extends Record<string, unknown>>(record: T) {
+  return Object.entries(record) as Array<[key: keyof T, value: T[keyof T]]>;
+}
