@@ -1,4 +1,4 @@
-import { NonEmptyArray, isNonEmpty, of } from "./Array";
+import { NonEmptyArray, isNonEmpty, of as arrayOf } from "./Array";
 import { Predicate, Refinement } from "./Predicate";
 import {
   Result,
@@ -12,6 +12,8 @@ import {
 
 export type Validator<I, O> = (input: I) => Promise<Result<NonEmptyArray<string>, O>>;
 
+export const of = <T>(value: T): ReturnType<Validator<T, T>> => Promise.resolve(success(value));
+
 export function fromPredicate<A, B extends A>(
   predicate: Refinement<A, B>,
   message: string,
@@ -21,7 +23,7 @@ export function fromPredicate<A>(predicate: Predicate<A>, message: string): Vali
 
 export function fromPredicate<A>(predicate: Predicate<A>, message: string) {
   return function (input: A) {
-    return Promise.resolve(resultFromPredicate(predicate, () => of(message))(input));
+    return Promise.resolve(resultFromPredicate(predicate, () => arrayOf(message))(input));
   };
 }
 
@@ -33,7 +35,7 @@ export function tryCatch<I, A, O>(
     try {
       return success(onSuccess(await action(input)));
     } catch (issue) {
-      return failure(of(onFailure(issue)));
+      return failure(arrayOf(onFailure(issue)));
     }
   };
 }

@@ -3,7 +3,7 @@ import { UnknownRecord, entries, map, some } from "./Record";
 import { Result, extract, failure, isFailure, success } from "./Result";
 import { useFieldArrayState } from "./useFieldArrayState";
 import { useFormState } from "./useFormState";
-import { Validator } from "./validator";
+import { Validator, of } from "./validator";
 
 export type UnknownFieldArray = Record<string, Array<UnknownRecord>>;
 
@@ -205,6 +205,15 @@ export function makeFieldGroups<T extends UnknownRecord, S extends ValidationSch
   });
 }
 
+/* Generic record validation */
+export function validateRecord<T extends Record<string, Result<unknown, unknown>>, F, S>(
+  record: T,
+): Result<F, S> {
+  return some(record, isFailure)
+    ? failure(map(record, (value) => (isFailure(value) ? value.failure : null)) as F)
+    : success(map(record, extract) as S);
+}
+
 /* Form validation */
 export type ValidationSchema<T extends UnknownRecord> = {
   [K in keyof T]: Validator<T[K], unknown> | null;
@@ -223,25 +232,15 @@ export async function validateForm<T extends UnknownRecord, S extends Validation
   values: T,
   schema: S,
 ): Promise<ValidationResult<T, S>> {
-  const schemaEntries = Object.entries(schema).map(([fieldName, validator]) => {
-    return [fieldName, validator ?? ((input: T[keyof T]) => Promise.resolve(success(input)))];
-  }) as Array<[keyof T, Validator<T[keyof T], unknown>]>;
+  const validationEntries = entries(schema).map(async ([fieldName, validator]) => {
+    const value = values[fieldName as keyof T];
+    const fieldValidator = (validator ?? of<T[keyof T]>) as Validator<T[keyof T], unknown>;
 
-  const result = Object.fromEntries(
-    await Promise.all(
-      schemaEntries.map(async ([key, validator]) => [key, await validator(values[key])] as const),
-    ),
-  );
+    return [fieldName, await fieldValidator(value)] as const;
+  });
+  const result = Object.fromEntries(await Promise.all(validationEntries));
 
-  const hasErrors = some(result, isFailure);
-
-  if (hasErrors) {
-    return failure(
-      map(result, (value) => (isFailure(value) ? value.failure : null)) as FormErrors<T>,
-    );
-  }
-
-  return success(map(result, extract) as ValidatedValues<T, S>);
+  return validateRecord<typeof result, FormErrors<T>, ValidatedValues<T, S>>(result);
 }
 
 /* Field array validation */
@@ -262,16 +261,13 @@ export async function validateFieldArray<T extends UnknownRecord, S extends Vali
     await Promise.all(values.map((groupValues) => validateForm(groupValues, schema)))
   ).reduce((result, groupValidationResult) => {
     if (isFailure(groupValidationResult)) {
-      return {
-        ...result,
-        errors: result.errors.concat(groupValidationResult.failure),
-      };
+      result.errors.push(groupValidationResult.failure);
+    } else {
+      result.errors.push(null);
+      result.values.push(groupValidationResult.success);
     }
 
-    return {
-      errors: result.errors.concat(null),
-      values: result.values.concat(groupValidationResult.success),
-    };
+    return result;
   }, initial);
 
   const hasErrors = result.errors.some((groupErrors) => groupErrors !== null);
@@ -317,24 +313,14 @@ export async function validateCompoundFieldArray<
   values: FieldArrayValues,
   schema: FieldArraySchema,
 ): Promise<CompoundFieldArrayValidationResult<FieldArrayValues, FieldArraySchema>> {
-  const validationEntries = await Promise.all(
-    entries(values).map(([key, values]) =>
-      validateFieldArray(values, schema[key]).then((result) => [key, result] as const),
-    ),
+  const validationEntries = entries(values).map(([key, values]) =>
+    validateFieldArray(values, schema[key]).then((result) => [key, result] as const),
   );
-  const result = Object.fromEntries(validationEntries);
+  const result = Object.fromEntries(await Promise.all(validationEntries));
 
-  const hasErrors = some(result, isFailure);
-
-  if (hasErrors) {
-    return failure(
-      map(result, (value) =>
-        isFailure(value) ? value.failure : null,
-      ) as FieldArrayValidationFailure<FieldArrayValues>,
-    );
-  }
-
-  return success(
-    map(result, extract) as FieldArrayValidatedValues<FieldArrayValues, FieldArraySchema>,
-  );
+  return validateRecord<
+    typeof result,
+    FieldArrayValidationFailure<FieldArrayValues>,
+    FieldArrayValidatedValues<FieldArrayValues, FieldArraySchema>
+  >(result);
 }
