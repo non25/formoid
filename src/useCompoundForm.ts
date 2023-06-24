@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useState } from "react";
 import {
   UnknownFieldArray,
   Toggle,
@@ -129,11 +129,8 @@ export function useCompoundForm<
 >(
   config: UseCompoundFormConfig<FormValues, FormSchema, FieldArrayValues, FieldArraySchema>,
 ): UseCompoundFormReturn<FormValues, FormSchema, FieldArrayValues, FieldArraySchema> {
-  const ref = useRef(config);
-  const { form: formConfig, fieldArray: fieldArrayConfig } = ref.current;
-
-  const form = useFormState(formConfig.initialValues);
-  const fieldArray = map(fieldArrayConfig.initialValues, useFieldArrayState);
+  const form = useFormState(config.form.initialValues);
+  const fieldArray = map(config.fieldArray.initialValues, useFieldArrayState);
 
   const values: CompoundValues<FormValues, FieldArrayValues> = {
     form: form.values,
@@ -142,16 +139,16 @@ export function useCompoundForm<
 
   const fieldProps = makeFieldProps({
     form,
-    schema: formConfig.validators(values),
-    validationStrategy: formConfig.validationStrategy,
+    schema: config.form.validators(values),
+    validationStrategy: config.form.validationStrategy,
   });
   const compoundFieldArray: FieldArrayReturn<FieldArrayValues> = map(fieldArray, (state, key) => ({
     append: state.append,
     errors: state.errors,
     groups: makeFieldGroups({
       fieldArray: state,
-      schema: fieldArrayConfig.validators(values)[key],
-      validationStrategy: fieldArrayConfig.validationStrategy,
+      schema: config.fieldArray.validators(values)[key],
+      validationStrategy: config.fieldArray.validationStrategy,
     }),
     handleReset: state.reset,
     remove: state.remove,
@@ -178,8 +175,8 @@ export function useCompoundForm<
   ) => {
     toggle("disable");
     Promise.all([
-      validateForm(values.form, formConfig.validators(values)),
-      validateCompoundFieldArray(values.fieldArray, fieldArrayConfig.validators(values)),
+      validateForm(values.form, config.form.validators(values)),
+      validateCompoundFieldArray(values.fieldArray, config.fieldArray.validators(values)),
     ]).then(([formResult, fieldArrayResult]) => {
       if (isSuccess(formResult) && isSuccess(fieldArrayResult)) {
         const submit = onSubmit instanceof Function ? onSubmit : onSubmit.onSuccess;
