@@ -3,6 +3,7 @@ import {
   FieldGroup,
   FieldProps,
   FormErrors,
+  FormValuesConstraint,
   SetErrors,
   SetFieldArrayErrors,
   Update,
@@ -18,16 +19,16 @@ import { useFieldArrayState } from "./useFieldArrayState";
 import { useFormState } from "./useFormState";
 import { Validator } from "./validator";
 
-type UseFormConfig<Values, Schema extends ValidationSchema<Values>> = {
+type UseFormConfig<Values extends FormValuesConstraint, Schema extends ValidationSchema<Values>> = {
   initialValues: Values;
   validationStrategy: ValidationStrategy;
   validators: (values: Values) => Schema;
 };
 
 type UseFormConfigExtended<
-  Values,
+  Values extends FormValuesConstraint,
   Schema extends ValidationSchema<Values>,
-  FieldArrayValues,
+  FieldArrayValues extends FormValuesConstraint,
   FieldArraySchema extends ValidationSchema<FieldArrayValues>,
 > = {
   form: {
@@ -43,9 +44,9 @@ type UseFormConfigExtended<
 };
 
 function isExtendedConfig<
-  Values,
+  Values extends FormValuesConstraint,
   Schema extends ValidationSchema<Values>,
-  FieldArrayValues,
+  FieldArrayValues extends FormValuesConstraint,
   FieldArraySchema extends ValidationSchema<FieldArrayValues>,
 >(
   config:
@@ -55,21 +56,21 @@ function isExtendedConfig<
   return "fieldArray" in config;
 }
 
-type OnSubmit<Values, Schema extends ValidationSchema<Values>> = {
+type OnSubmit<Values extends FormValuesConstraint, Schema extends ValidationSchema<Values>> = {
   (data: ValidatedValues<Values, Schema>): Promise<unknown>;
 };
 
-type OnSubmitMatch<Values, Schema extends ValidationSchema<Values>> = {
+type OnSubmitMatch<Values extends FormValuesConstraint, Schema extends ValidationSchema<Values>> = {
   onSuccess: OnSubmit<Values, Schema>;
   onFailure: () => unknown;
 };
 
-type HandleSubmit<Values, Schema extends ValidationSchema<Values>> = {
+type HandleSubmit<Values extends FormValuesConstraint, Schema extends ValidationSchema<Values>> = {
   (onSubmit: OnSubmit<Values, Schema>): void;
   (onSubmit: OnSubmitMatch<Values, Schema>): void;
 };
 
-type UseFormReturn<Values, Schema extends ValidationSchema<Values>> = {
+type UseFormReturn<Values extends FormValuesConstraint, Schema extends ValidationSchema<Values>> = {
   errors: FormErrors<Values>;
   fieldProps: <K extends keyof Values>(key: K) => FieldProps<Values[K]>;
   handleReset: (update?: Update<Values>) => void;
@@ -81,9 +82,9 @@ type UseFormReturn<Values, Schema extends ValidationSchema<Values>> = {
 };
 
 type OnSubmitExtended<
-  Values,
+  Values extends FormValuesConstraint,
   Schema extends ValidationSchema<Values>,
-  FieldArrayValues,
+  FieldArrayValues extends FormValuesConstraint,
   FieldArraySchema extends ValidationSchema<FieldArrayValues>,
 > = (
   formValues: ValidatedValues<Values, Schema>,
@@ -91,9 +92,9 @@ type OnSubmitExtended<
 ) => Promise<unknown>;
 
 type OnSubmitExtendedMatch<
-  Values,
+  Values extends FormValuesConstraint,
   Schema extends ValidationSchema<Values>,
-  FieldArrayValues,
+  FieldArrayValues extends FormValuesConstraint,
   FieldArraySchema extends ValidationSchema<FieldArrayValues>,
 > = {
   onSuccess: OnSubmitExtended<Values, Schema, FieldArrayValues, FieldArraySchema>;
@@ -101,9 +102,9 @@ type OnSubmitExtendedMatch<
 };
 
 type HandleSubmitExtended<
-  Values,
+  Values extends FormValuesConstraint,
   Schema extends ValidationSchema<Values>,
-  FieldArrayValues,
+  FieldArrayValues extends FormValuesConstraint,
   FieldArraySchema extends ValidationSchema<FieldArrayValues>,
 > = {
   (onSubmit: OnSubmitExtended<Values, Schema, FieldArrayValues, FieldArraySchema>): void;
@@ -116,9 +117,9 @@ type UpdateExtended<Values, FieldArrayValues> = Partial<{
 }>;
 
 type UseFormReturnExtended<
-  Values,
+  Values extends FormValuesConstraint,
   Schema extends ValidationSchema<Values>,
-  FieldArrayValues,
+  FieldArrayValues extends FormValuesConstraint,
   FieldArraySchema extends ValidationSchema<FieldArrayValues>,
 > = {
   form: Omit<UseFormReturn<Values, Schema>, "handleSubmit" | "handleReset" | "isSubmitting">;
@@ -137,23 +138,23 @@ type UseFormReturnExtended<
 };
 
 export function useForm<
-  Values extends Record<string, unknown>,
+  Values extends FormValuesConstraint,
   Schema extends ValidationSchema<Values>,
 >(config: UseFormConfig<Values, Schema>): UseFormReturn<Values, Schema>;
 
 export function useForm<
-  Values extends Record<string, unknown>,
+  Values extends FormValuesConstraint,
   Schema extends ValidationSchema<Values>,
-  FieldArrayValues extends Record<string, unknown>,
+  FieldArrayValues extends FormValuesConstraint,
   FieldArraySchema extends ValidationSchema<FieldArrayValues>,
 >(
   config: UseFormConfigExtended<Values, Schema, FieldArrayValues, FieldArraySchema>,
 ): UseFormReturnExtended<Values, Schema, FieldArrayValues, FieldArraySchema>;
 
 export function useForm<
-  Values extends Record<string, unknown>,
+  Values extends FormValuesConstraint,
   Schema extends ValidationSchema<Values>,
-  FieldArrayValues extends Record<string, unknown>,
+  FieldArrayValues extends FormValuesConstraint,
   FieldArraySchema extends ValidationSchema<FieldArrayValues>,
 >(
   config:

@@ -1,7 +1,9 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 import {
   FormErrors,
+  FormValuesConstraint,
   SetErrors,
+  Toggle,
   Update,
   formStateManager,
   getErrors,
@@ -9,8 +11,9 @@ import {
   initializeForm,
   updateValues,
 } from "./Form";
+import { forEach } from "./Record";
 
-export function useFormState<T>(initialValues: T) {
+export function useFormState<T extends FormValuesConstraint>(initialValues: T) {
   const persistentInitialValues = useRef(initialValues);
   const [state, setState] = useState(initializeForm(persistentInitialValues.current));
 
@@ -45,22 +48,12 @@ export function useFormState<T>(initialValues: T) {
     [values],
   );
 
-  const toggle = useCallback(
-    (action: "enable" | "disable") => {
-      for (const key in values) {
-        if (action === "enable") {
-          enable(key);
-        } else {
-          disable(key);
-        }
-      }
-    },
+  const toggle: Toggle = useCallback(
+    (action) => forEach(values, (_, key) => (action === "enable" ? enable : disable)(key)),
     [disable, enable, values],
   );
   const propagateErrors = useCallback(
-    (errors: FormErrors<T>): void => {
-      for (const key in errors) setErrors(key, errors[key]);
-    },
+    (errors: FormErrors<T>): void => forEach(errors, (errors, key) => setErrors(key, errors)),
     [setErrors],
   );
 

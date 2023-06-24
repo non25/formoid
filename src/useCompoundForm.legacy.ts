@@ -1,5 +1,6 @@
 import { useState } from "react";
 import {
+  FormValuesConstraint,
   ValidatedValues,
   ValidationSchema,
   makeFieldGroups,
@@ -21,9 +22,9 @@ type CompoundValues<Values, FieldArrayValues> = {
 };
 
 type UseCompoundFormConfig<
-  Values,
+  Values extends FormValuesConstraint,
   Schema extends ValidationSchema<Values>,
-  FieldArrayValues,
+  FieldArrayValues extends FormValuesConstraint,
   FieldArraySchema extends ValidationSchema<FieldArrayValues>,
 > = {
   form: Overwrite<
@@ -41,9 +42,9 @@ type UseCompoundFormConfig<
 };
 
 type OnSubmitCompound<
-  Values,
+  Values extends FormValuesConstraint,
   Schema extends ValidationSchema<Values>,
-  FieldArrayValues,
+  FieldArrayValues extends FormValuesConstraint,
   FieldArraySchema extends ValidationSchema<FieldArrayValues>,
 > = (
   values: CompoundValues<
@@ -53,9 +54,9 @@ type OnSubmitCompound<
 ) => Promise<unknown>;
 
 type OnSubmitCompoundMatch<
-  Values,
+  Values extends FormValuesConstraint,
   Schema extends ValidationSchema<Values>,
-  FieldArrayValues,
+  FieldArrayValues extends FormValuesConstraint,
   FieldArraySchema extends ValidationSchema<FieldArrayValues>,
 > = {
   onSuccess: OnSubmitCompound<Values, Schema, FieldArrayValues, FieldArraySchema>;
@@ -63,9 +64,9 @@ type OnSubmitCompoundMatch<
 };
 
 type HandleSubmitCompound<
-  Values,
+  Values extends FormValuesConstraint,
   Schema extends ValidationSchema<Values>,
-  FieldArrayValues,
+  FieldArrayValues extends FormValuesConstraint,
   FieldArraySchema extends ValidationSchema<FieldArrayValues>,
 > = {
   (onSubmit: OnSubmitCompound<Values, Schema, FieldArrayValues, FieldArraySchema>): void;
@@ -75,9 +76,9 @@ type HandleSubmitCompound<
 type RedundantFields = "handleSubmit" | "isSubmitting";
 
 type UseCompoundFormReturn<
-  Values,
+  Values extends FormValuesConstraint,
   Schema extends ValidationSchema<Values>,
-  FieldArrayValues,
+  FieldArrayValues extends FormValuesConstraint,
   FieldArraySchema extends ValidationSchema<FieldArrayValues>,
 > = {
   form: Omit<UseFormReturn<Values, Schema>, RedundantFields>;
@@ -87,9 +88,9 @@ type UseCompoundFormReturn<
 };
 
 export function useCompoundForm<
-  Values extends Record<string, unknown>,
+  Values extends FormValuesConstraint,
   Schema extends ValidationSchema<Values>,
-  FieldArrayValues extends Record<string, unknown>,
+  FieldArrayValues extends FormValuesConstraint,
   FieldArraySchema extends ValidationSchema<FieldArrayValues>,
 >(
   config: UseCompoundFormConfig<Values, Schema, FieldArrayValues, FieldArraySchema>,

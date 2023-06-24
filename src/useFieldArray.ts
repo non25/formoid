@@ -2,8 +2,10 @@ import { useState } from "react";
 import {
   FieldGroup,
   FormErrors,
+  FormValuesConstraint,
   HandleSubmit,
   SetFieldArrayErrors,
+  Toggle,
   Update,
   ValidationSchema,
   ValidationStrategy,
@@ -13,13 +15,13 @@ import {
 import { isFailure } from "./Result";
 import { useFieldArrayState } from "./useFieldArrayState";
 
-export type UseFieldArrayConfig<T, S extends ValidationSchema<T>> = {
+export type UseFieldArrayConfig<T extends FormValuesConstraint, S extends ValidationSchema<T>> = {
   initialValues: Array<T>;
   validationStrategy: ValidationStrategy;
   validators: (values: Array<T>) => S;
 };
 
-export type UseFieldArrayReturn<T, S extends ValidationSchema<T>> = {
+export type UseFieldArrayReturn<T extends FormValuesConstraint, S extends ValidationSchema<T>> = {
   append: (values: T) => void;
   errors: Array<FormErrors<T>>;
   groups: Array<FieldGroup<T>>;
@@ -32,7 +34,7 @@ export type UseFieldArrayReturn<T, S extends ValidationSchema<T>> = {
   values: Array<T>;
 };
 
-export function useFieldArray<T extends Record<string, unknown>, S extends ValidationSchema<T>>({
+export function useFieldArray<T extends FormValuesConstraint, S extends ValidationSchema<T>>({
   initialValues,
   validationStrategy,
   validators,
@@ -47,10 +49,10 @@ export function useFieldArray<T extends Record<string, unknown>, S extends Valid
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  function toggle(action: "enable" | "disable") {
+  const toggle: Toggle = (action) => {
     setIsSubmitting(action === "disable");
     fieldArray.toggle(action);
-  }
+  };
 
   const handleSubmit: HandleSubmit<"FieldArray", T, S> = (onSubmit) => {
     toggle("disable");

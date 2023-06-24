@@ -1,5 +1,8 @@
 import { useRef, useState } from "react";
 import {
+  FieldArrayValuesConstraint,
+  FormValuesConstraint,
+  Toggle,
   ValidatedValues,
   ValidationSchema,
   ValidationStrategy,
@@ -14,10 +17,6 @@ import { UseFieldArrayReturn } from "./useFieldArray";
 import { useFieldArrayState } from "./useFieldArrayState";
 import { UseFormReturn } from "./useForm";
 import { useFormState } from "./useFormState";
-
-type FormValuesConstraint = Record<string, unknown>;
-
-type FieldArrayValuesConstraint = Record<string, Array<unknown>>;
 
 type RedundantFields = "handleSubmit" | "isSubmitting";
 
@@ -154,11 +153,11 @@ export function useCompoundForm<
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  function toggle(action: "enable" | "disable") {
+  const toggle: Toggle = (action) => {
     setIsSubmitting(action === "disable");
     form.toggle(action);
     forEach(fieldArray, (item) => item.toggle(action));
-  }
+  };
 
   const handleSubmit: HandleSubmit<FormValues, FormSchema, FieldArrayValues, FieldArraySchema> = (
     onSubmit,

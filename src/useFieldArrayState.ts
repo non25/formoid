@@ -2,7 +2,9 @@ import { useCallback, useMemo, useRef, useState } from "react";
 import { deleteAt, modifyAt } from "./Array";
 import {
   FormErrors,
+  FormValuesConstraint,
   SetFieldArrayErrors,
+  Toggle,
   Update,
   formStateManager,
   getErrors,
@@ -10,8 +12,9 @@ import {
   initializeForm,
   updateValues,
 } from "./Form";
+import { forEach } from "./Record";
 
-export function useFieldArrayState<T>(initialValues: Array<T>) {
+export function useFieldArrayState<T extends FormValuesConstraint>(initialValues: Array<T>) {
   const persistentInitialValues = useRef(initialValues);
   const [state, setState] = useState(persistentInitialValues.current.map(initializeForm));
 
@@ -49,33 +52,23 @@ export function useFieldArrayState<T>(initialValues: Array<T>) {
     setState(modifyAt(index, (group) => updateValues(group, update(getValues(group)))));
   }, []);
 
-  const toggle = useCallback(
-    (action: "enable" | "disable") => {
-      for (const [index] of values.entries()) {
-        for (const key in values[index]) {
-          if (action === "enable") {
-            enable(index, key);
-          } else {
-            disable(index, key);
-          }
-        }
-      }
+  const toggle: Toggle = useCallback(
+    (action) => {
+      values.forEach((itemValues, index) => {
+        forEach(itemValues, (_, key) => (action === "enable" ? enable : disable)(index, key));
+      });
     },
     [disable, enable, values],
   );
   const propagateErrors = useCallback(
     (errors: Array<FormErrors<T> | null>): void => {
-      for (const [index, groupErrors] of errors.entries()) {
+      errors.forEach((groupErrors, index) => {
         if (groupErrors) {
-          for (const key in groupErrors) {
-            setErrors(index, key, groupErrors[key]);
-          }
+          forEach(groupErrors, (errors, key) => setErrors(index, key, errors));
         } else {
-          for (const key in values[index]) {
-            setErrors(index, key, null);
-          }
+          forEach(values[index], (_, key) => setErrors(index, key, null));
         }
-      }
+      });
     },
     [setErrors, values],
   );

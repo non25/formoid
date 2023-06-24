@@ -2,8 +2,10 @@ import { useState } from "react";
 import {
   FieldProps,
   FormErrors,
+  FormValuesConstraint,
   HandleSubmit,
   SetErrors,
+  Toggle,
   Update,
   ValidationSchema,
   ValidationStrategy,
@@ -13,13 +15,13 @@ import {
 import { isFailure } from "./Result";
 import { useFormState } from "./useFormState";
 
-export type UseFormConfig<T, S extends ValidationSchema<T>> = {
+export type UseFormConfig<T extends FormValuesConstraint, S extends ValidationSchema<T>> = {
   initialValues: T;
   validationStrategy: ValidationStrategy;
   validators: (values: T) => S;
 };
 
-export type UseFormReturn<T, S extends ValidationSchema<T>> = {
+export type UseFormReturn<T extends FormValuesConstraint, S extends ValidationSchema<T>> = {
   errors: FormErrors<T>;
   fieldProps: <K extends keyof T>(key: K) => FieldProps<T[K]>;
   handleReset: (update?: Update<T>) => void;
@@ -30,7 +32,7 @@ export type UseFormReturn<T, S extends ValidationSchema<T>> = {
   values: T;
 };
 
-export function useForm<T extends Record<string, unknown>, S extends ValidationSchema<T>>({
+export function useForm<T extends FormValuesConstraint, S extends ValidationSchema<T>>({
   initialValues,
   validationStrategy,
   validators,
@@ -41,10 +43,10 @@ export function useForm<T extends Record<string, unknown>, S extends ValidationS
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  function toggle(action: "enable" | "disable") {
+  const toggle: Toggle = (action) => {
     setIsSubmitting(action === "disable");
     form.toggle(action);
-  }
+  };
 
   const handleSubmit: HandleSubmit<"Form", T, S> = (onSubmit) => {
     toggle("disable");
