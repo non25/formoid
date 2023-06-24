@@ -1,6 +1,5 @@
 import { useState } from "react";
 import {
-  FormValuesConstraint,
   ValidatedValues,
   ValidationSchema,
   makeFieldGroups,
@@ -8,6 +7,7 @@ import {
   validateFieldArray,
   validateForm,
 } from "./Form";
+import { UnknownRecord } from "./Record";
 import { isFailure, isSuccess } from "./Result";
 import { UseFieldArrayConfig, UseFieldArrayReturn } from "./useFieldArray";
 import { useFieldArrayState } from "./useFieldArrayState";
@@ -22,9 +22,9 @@ type CompoundValues<Values, FieldArrayValues> = {
 };
 
 type UseCompoundFormConfig<
-  Values extends FormValuesConstraint,
+  Values extends UnknownRecord,
   Schema extends ValidationSchema<Values>,
-  FieldArrayValues extends FormValuesConstraint,
+  FieldArrayValues extends UnknownRecord,
   FieldArraySchema extends ValidationSchema<FieldArrayValues>,
 > = {
   form: Overwrite<
@@ -42,9 +42,9 @@ type UseCompoundFormConfig<
 };
 
 type OnSubmitCompound<
-  Values extends FormValuesConstraint,
+  Values extends UnknownRecord,
   Schema extends ValidationSchema<Values>,
-  FieldArrayValues extends FormValuesConstraint,
+  FieldArrayValues extends UnknownRecord,
   FieldArraySchema extends ValidationSchema<FieldArrayValues>,
 > = (
   values: CompoundValues<
@@ -54,9 +54,9 @@ type OnSubmitCompound<
 ) => Promise<unknown>;
 
 type OnSubmitCompoundMatch<
-  Values extends FormValuesConstraint,
+  Values extends UnknownRecord,
   Schema extends ValidationSchema<Values>,
-  FieldArrayValues extends FormValuesConstraint,
+  FieldArrayValues extends UnknownRecord,
   FieldArraySchema extends ValidationSchema<FieldArrayValues>,
 > = {
   onSuccess: OnSubmitCompound<Values, Schema, FieldArrayValues, FieldArraySchema>;
@@ -64,9 +64,9 @@ type OnSubmitCompoundMatch<
 };
 
 type HandleSubmitCompound<
-  Values extends FormValuesConstraint,
+  Values extends UnknownRecord,
   Schema extends ValidationSchema<Values>,
-  FieldArrayValues extends FormValuesConstraint,
+  FieldArrayValues extends UnknownRecord,
   FieldArraySchema extends ValidationSchema<FieldArrayValues>,
 > = {
   (onSubmit: OnSubmitCompound<Values, Schema, FieldArrayValues, FieldArraySchema>): void;
@@ -76,9 +76,9 @@ type HandleSubmitCompound<
 type RedundantFields = "handleSubmit" | "isSubmitting";
 
 type UseCompoundFormReturn<
-  Values extends FormValuesConstraint,
+  Values extends UnknownRecord,
   Schema extends ValidationSchema<Values>,
-  FieldArrayValues extends FormValuesConstraint,
+  FieldArrayValues extends UnknownRecord,
   FieldArraySchema extends ValidationSchema<FieldArrayValues>,
 > = {
   form: Omit<UseFormReturn<Values, Schema>, RedundantFields>;
@@ -88,9 +88,9 @@ type UseCompoundFormReturn<
 };
 
 export function useCompoundForm<
-  Values extends FormValuesConstraint,
+  Values extends UnknownRecord,
   Schema extends ValidationSchema<Values>,
-  FieldArrayValues extends FormValuesConstraint,
+  FieldArrayValues extends UnknownRecord,
   FieldArraySchema extends ValidationSchema<FieldArrayValues>,
 >(
   config: UseCompoundFormConfig<Values, Schema, FieldArrayValues, FieldArraySchema>,

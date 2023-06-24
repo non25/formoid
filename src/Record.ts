@@ -1,6 +1,6 @@
 import { Predicate } from "./Predicate";
 
-type UnknownRecord = Record<string, unknown>;
+export type UnknownRecord = Record<string, unknown>;
 
 export function some<T extends UnknownRecord>(record: T, predicate: Predicate<T[keyof T]>) {
   for (const key in record) if (predicate(record[key])) return true;

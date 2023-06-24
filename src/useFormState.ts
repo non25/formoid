@@ -1,7 +1,6 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 import {
   FormErrors,
-  FormValuesConstraint,
   SetErrors,
   Toggle,
   Update,
@@ -11,9 +10,9 @@ import {
   initializeForm,
   updateValues,
 } from "./Form";
-import { forEach } from "./Record";
+import { UnknownRecord, forEach } from "./Record";
 
-export function useFormState<T extends FormValuesConstraint>(initialValues: T) {
+export function useFormState<T extends UnknownRecord>(initialValues: T) {
   const persistentInitialValues = useRef(initialValues);
   const [state, setState] = useState(initializeForm(persistentInitialValues.current));
 

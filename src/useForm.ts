@@ -2,7 +2,6 @@ import { useState } from "react";
 import {
   FieldProps,
   FormErrors,
-  FormValuesConstraint,
   HandleSubmit,
   SetErrors,
   Toggle,
@@ -12,16 +11,17 @@ import {
   makeFieldProps,
   validateForm,
 } from "./Form";
+import { UnknownRecord } from "./Record";
 import { isFailure } from "./Result";
 import { useFormState } from "./useFormState";
 
-export type UseFormConfig<T extends FormValuesConstraint, S extends ValidationSchema<T>> = {
+export type UseFormConfig<T extends UnknownRecord, S extends ValidationSchema<T>> = {
   initialValues: T;
   validationStrategy: ValidationStrategy;
   validators: (values: T) => S;
 };
 
-export type UseFormReturn<T extends FormValuesConstraint, S extends ValidationSchema<T>> = {
+export type UseFormReturn<T extends UnknownRecord, S extends ValidationSchema<T>> = {
   errors: FormErrors<T>;
   fieldProps: <K extends keyof T>(key: K) => FieldProps<T[K]>;
   handleReset: (update?: Update<T>) => void;
@@ -32,7 +32,7 @@ export type UseFormReturn<T extends FormValuesConstraint, S extends ValidationSc
   values: T;
 };
 
-export function useForm<T extends FormValuesConstraint, S extends ValidationSchema<T>>({
+export function useForm<T extends UnknownRecord, S extends ValidationSchema<T>>({
   initialValues,
   validationStrategy,
   validators,

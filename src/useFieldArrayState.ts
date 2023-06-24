@@ -2,7 +2,6 @@ import { useCallback, useMemo, useRef, useState } from "react";
 import { deleteAt, modifyAt } from "./Array";
 import {
   FormErrors,
-  FormValuesConstraint,
   SetFieldArrayErrors,
   Toggle,
   Update,
@@ -12,9 +11,9 @@ import {
   initializeForm,
   updateValues,
 } from "./Form";
-import { forEach } from "./Record";
+import { UnknownRecord, forEach } from "./Record";
 
-export function useFieldArrayState<T extends FormValuesConstraint>(initialValues: Array<T>) {
+export function useFieldArrayState<T extends UnknownRecord>(initialValues: Array<T>) {
   const persistentInitialValues = useRef(initialValues);
   const [state, setState] = useState(persistentInitialValues.current.map(initializeForm));
 

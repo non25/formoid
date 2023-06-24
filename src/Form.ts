@@ -1,13 +1,11 @@
 import { NonEmptyArray } from "./Array";
-import { entries, map, some } from "./Record";
+import { UnknownRecord, entries, map, some } from "./Record";
 import { Result, extract, failure, isFailure, success } from "./Result";
 import { useFieldArrayState } from "./useFieldArrayState";
 import { useFormState } from "./useFormState";
 import { Validator } from "./validator";
 
-export type FormValuesConstraint = Record<string, unknown>;
-
-export type FieldArrayValuesConstraint = Record<string, Array<FormValuesConstraint>>;
+export type UnknownFieldArray = Record<string, Array<UnknownRecord>>;
 
 export type FieldState<T> = {
   disabled: boolean;
@@ -49,7 +47,7 @@ export type ValidationStrategy = "onChange" | "onBlur" | "onSubmit";
 
 type OnSubmit<
   K extends "Form" | "FieldArray",
-  T extends FormValuesConstraint,
+  T extends UnknownRecord,
   S extends ValidationSchema<T>,
 > = {
   (data: K extends "Form" ? ValidatedValues<T, S> : Array<ValidatedValues<T, S>>): Promise<unknown>;
@@ -57,7 +55,7 @@ type OnSubmit<
 
 type OnSubmitMatch<
   K extends "Form" | "FieldArray",
-  T extends FormValuesConstraint,
+  T extends UnknownRecord,
   S extends ValidationSchema<T>,
 > = {
   onSuccess: OnSubmit<K, T, S>;
@@ -66,7 +64,7 @@ type OnSubmitMatch<
 
 export type HandleSubmit<
   K extends "Form" | "FieldArray",
-  T extends FormValuesConstraint,
+  T extends UnknownRecord,
   S extends ValidationSchema<T>,
 > = {
   (onSubmit: OnSubmit<K, T, S>): void;
@@ -134,13 +132,13 @@ export function formStateManager<T>(state: FormState<T>) {
 }
 
 /* FieldProps */
-type FieldPropsConfig<T extends FormValuesConstraint, S extends ValidationSchema<T>> = {
+type FieldPropsConfig<T extends UnknownRecord, S extends ValidationSchema<T>> = {
   form: ReturnType<typeof useFormState<T>>;
   schema: S;
   validationStrategy: ValidationStrategy;
 };
 
-export function makeFieldProps<T extends FormValuesConstraint, S extends ValidationSchema<T>>({
+export function makeFieldProps<T extends UnknownRecord, S extends ValidationSchema<T>>({
   form,
   schema,
   validationStrategy,
@@ -175,13 +173,13 @@ export function makeFieldProps<T extends FormValuesConstraint, S extends Validat
 }
 
 /* FieldGroups */
-type FieldGroupsConfig<T extends FormValuesConstraint, S extends ValidationSchema<T>> = {
+type FieldGroupsConfig<T extends UnknownRecord, S extends ValidationSchema<T>> = {
   fieldArray: ReturnType<typeof useFieldArrayState<T>>;
   schema: S;
   validationStrategy: ValidationStrategy;
 };
 
-export function makeFieldGroups<T extends FormValuesConstraint, S extends ValidationSchema<T>>({
+export function makeFieldGroups<T extends UnknownRecord, S extends ValidationSchema<T>>({
   fieldArray,
   schema,
   validationStrategy,
@@ -218,20 +216,20 @@ export function makeFieldGroups<T extends FormValuesConstraint, S extends Valida
 }
 
 /* Form validation */
-export type ValidationSchema<T extends FormValuesConstraint> = {
+export type ValidationSchema<T extends UnknownRecord> = {
   [K in keyof T]: Validator<T[K], unknown> | null;
 };
 
-export type ValidatedValues<T extends FormValuesConstraint, S extends ValidationSchema<T>> = {
+export type ValidatedValues<T extends UnknownRecord, S extends ValidationSchema<T>> = {
   [K in keyof T]: S[K] extends Validator<T[K], infer O> ? O : T[K];
 };
 
-type ValidationResult<T extends FormValuesConstraint, S extends ValidationSchema<T>> = Result<
+type ValidationResult<T extends UnknownRecord, S extends ValidationSchema<T>> = Result<
   FormErrors<T>,
   ValidatedValues<T, S>
 >;
 
-export async function validateForm<T extends FormValuesConstraint, S extends ValidationSchema<T>>(
+export async function validateForm<T extends UnknownRecord, S extends ValidationSchema<T>>(
   values: T,
   schema: S,
 ): Promise<ValidationResult<T, S>> {
@@ -257,15 +255,15 @@ export async function validateForm<T extends FormValuesConstraint, S extends Val
 }
 
 /* Field array validation */
-type FieldArrayValidationResult<
-  T extends FormValuesConstraint,
-  S extends ValidationSchema<T>,
-> = Result<Array<FormErrors<T> | null>, Array<ValidatedValues<T, S>>>;
+type FieldArrayValidationResult<T extends UnknownRecord, S extends ValidationSchema<T>> = Result<
+  Array<FormErrors<T> | null>,
+  Array<ValidatedValues<T, S>>
+>;
 
-export async function validateFieldArray<
-  T extends FormValuesConstraint,
-  S extends ValidationSchema<T>,
->(values: Array<T>, schema: S): Promise<FieldArrayValidationResult<T, S>> {
+export async function validateFieldArray<T extends UnknownRecord, S extends ValidationSchema<T>>(
+  values: Array<T>,
+  schema: S,
+): Promise<FieldArrayValidationResult<T, S>> {
   const initial = {
     errors: [] as Array<FormErrors<T> | null>,
     values: [] as Array<ValidatedValues<T, S>>,
@@ -292,16 +290,16 @@ export async function validateFieldArray<
 }
 
 /* Compound field array validation */
-type FieldArrayValidationSchema<FieldArrayValues extends FieldArrayValuesConstraint> = {
+type FieldArrayValidationSchema<FieldArrayValues extends UnknownFieldArray> = {
   [K in keyof FieldArrayValues]: ValidationSchema<FieldArrayValues[K][number]>;
 };
 
-type FieldArrayValidationFailure<FieldArrayValues extends FieldArrayValuesConstraint> = {
+type FieldArrayValidationFailure<FieldArrayValues extends UnknownFieldArray> = {
   [K in keyof FieldArrayValues]: Array<FormErrors<FieldArrayValues[K][number]> | null> | null;
 };
 
 type FieldArrayValidatedValues<
-  FieldArrayValues extends FieldArrayValuesConstraint,
+  FieldArrayValues extends UnknownFieldArray,
   FieldArraySchema extends FieldArrayValidationSchema<FieldArrayValues>,
 > = {
   [K in keyof FieldArrayValues]: Array<
@@ -315,7 +313,7 @@ type FieldArrayValidatedValues<
 };
 
 type CompoundFieldArrayValidationResult<
-  FieldArrayValues extends FieldArrayValuesConstraint,
+  FieldArrayValues extends UnknownFieldArray,
   FieldArraySchema extends FieldArrayValidationSchema<FieldArrayValues>,
 > = Result<
   FieldArrayValidationFailure<FieldArrayValues>,
@@ -323,7 +321,7 @@ type CompoundFieldArrayValidationResult<
 >;
 
 export async function validateCompoundFieldArray<
-  FieldArrayValues extends FieldArrayValuesConstraint,
+  FieldArrayValues extends UnknownFieldArray,
   FieldArraySchema extends FieldArrayValidationSchema<FieldArrayValues>,
 >(
   values: FieldArrayValues,

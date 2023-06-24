@@ -1,7 +1,6 @@
 import { useRef, useState } from "react";
 import {
-  FieldArrayValuesConstraint,
-  FormValuesConstraint,
+  UnknownFieldArray,
   Toggle,
   ValidatedValues,
   ValidationSchema,
@@ -11,7 +10,7 @@ import {
   validateCompoundFieldArray,
   validateForm,
 } from "./Form";
-import { forEach, map } from "./Record";
+import { UnknownRecord, forEach, map } from "./Record";
 import { isFailure, isSuccess } from "./Result";
 import { UseFieldArrayReturn } from "./useFieldArray";
 import { useFieldArrayState } from "./useFieldArrayState";
@@ -25,14 +24,14 @@ type CompoundValues<FormValues, FieldArrayValues> = {
   fieldArray: FieldArrayValues;
 };
 
-type FieldArrayValidationSchema<FieldArrayValues extends FieldArrayValuesConstraint> = {
+type FieldArrayValidationSchema<FieldArrayValues extends UnknownFieldArray> = {
   [K in keyof FieldArrayValues]: ValidationSchema<FieldArrayValues[K][number]>;
 };
 
 type UseCompoundFormConfig<
-  FormValues extends FormValuesConstraint,
+  FormValues extends UnknownRecord,
   FormSchema extends ValidationSchema<FormValues>,
-  FieldArrayValues extends FieldArrayValuesConstraint,
+  FieldArrayValues extends UnknownFieldArray,
   FieldArraySchema extends FieldArrayValidationSchema<FieldArrayValues>,
 > = {
   form: {
@@ -47,7 +46,7 @@ type UseCompoundFormConfig<
   };
 };
 
-type FieldArrayReturn<FieldArrayValues extends FieldArrayValuesConstraint> = {
+type FieldArrayReturn<FieldArrayValues extends UnknownFieldArray> = {
   [K in keyof FieldArrayValues]: Omit<
     UseFieldArrayReturn<FieldArrayValues[K][number], never>,
     RedundantFields
@@ -55,7 +54,7 @@ type FieldArrayReturn<FieldArrayValues extends FieldArrayValuesConstraint> = {
 };
 
 type FieldArrayValidatedValues<
-  FieldArrayValues extends FieldArrayValuesConstraint,
+  FieldArrayValues extends UnknownFieldArray,
   FieldArraySchema extends FieldArrayValidationSchema<FieldArrayValues>,
 > = {
   [K in keyof FieldArrayValues]: Array<
@@ -69,9 +68,9 @@ type FieldArrayValidatedValues<
 };
 
 type OnSubmit<
-  FormValues extends FormValuesConstraint,
+  FormValues extends UnknownRecord,
   FormSchema extends ValidationSchema<FormValues>,
-  FieldArrayValues extends FieldArrayValuesConstraint,
+  FieldArrayValues extends UnknownFieldArray,
   FieldArraySchema extends FieldArrayValidationSchema<FieldArrayValues>,
 > = (
   values: CompoundValues<
@@ -81,9 +80,9 @@ type OnSubmit<
 ) => Promise<unknown>;
 
 type OnSubmitMatch<
-  FormValues extends FormValuesConstraint,
+  FormValues extends UnknownRecord,
   FormSchema extends ValidationSchema<FormValues>,
-  FieldArrayValues extends FieldArrayValuesConstraint,
+  FieldArrayValues extends UnknownFieldArray,
   FieldArraySchema extends FieldArrayValidationSchema<FieldArrayValues>,
 > = {
   onFailure: () => unknown;
@@ -91,9 +90,9 @@ type OnSubmitMatch<
 };
 
 type HandleSubmit<
-  FormValues extends FormValuesConstraint,
+  FormValues extends UnknownRecord,
   FormSchema extends ValidationSchema<FormValues>,
-  FieldArrayValues extends FieldArrayValuesConstraint,
+  FieldArrayValues extends UnknownFieldArray,
   FieldArraySchema extends FieldArrayValidationSchema<FieldArrayValues>,
 > = {
   (onSubmit: OnSubmit<FormValues, FormSchema, FieldArrayValues, FieldArraySchema>): void;
@@ -101,9 +100,9 @@ type HandleSubmit<
 };
 
 type UseCompoundFormReturn<
-  FormValues extends FormValuesConstraint,
+  FormValues extends UnknownRecord,
   FormSchema extends ValidationSchema<FormValues>,
-  FieldArrayValues extends FieldArrayValuesConstraint,
+  FieldArrayValues extends UnknownFieldArray,
   FieldArraySchema extends FieldArrayValidationSchema<FieldArrayValues>,
 > = {
   fieldArray: FieldArrayReturn<FieldArrayValues>;
@@ -113,9 +112,9 @@ type UseCompoundFormReturn<
 };
 
 export function useCompoundForm<
-  FormValues extends FormValuesConstraint,
+  FormValues extends UnknownRecord,
   FormSchema extends ValidationSchema<FormValues>,
-  FieldArrayValues extends FieldArrayValuesConstraint,
+  FieldArrayValues extends UnknownFieldArray,
   FieldArraySchema extends FieldArrayValidationSchema<FieldArrayValues>,
 >(
   config: UseCompoundFormConfig<FormValues, FormSchema, FieldArrayValues, FieldArraySchema>,

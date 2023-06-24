@@ -2,7 +2,6 @@ import { useState } from "react";
 import {
   FieldGroup,
   FormErrors,
-  FormValuesConstraint,
   HandleSubmit,
   SetFieldArrayErrors,
   Toggle,
@@ -12,16 +11,17 @@ import {
   makeFieldGroups,
   validateFieldArray,
 } from "./Form";
+import { UnknownRecord } from "./Record";
 import { isFailure } from "./Result";
 import { useFieldArrayState } from "./useFieldArrayState";
 
-export type UseFieldArrayConfig<T extends FormValuesConstraint, S extends ValidationSchema<T>> = {
+export type UseFieldArrayConfig<T extends UnknownRecord, S extends ValidationSchema<T>> = {
   initialValues: Array<T>;
   validationStrategy: ValidationStrategy;
   validators: (values: Array<T>) => S;
 };
 
-export type UseFieldArrayReturn<T extends FormValuesConstraint, S extends ValidationSchema<T>> = {
+export type UseFieldArrayReturn<T extends UnknownRecord, S extends ValidationSchema<T>> = {
   append: (values: T) => void;
   errors: Array<FormErrors<T>>;
   groups: Array<FieldGroup<T>>;
@@ -34,7 +34,7 @@ export type UseFieldArrayReturn<T extends FormValuesConstraint, S extends Valida
   values: Array<T>;
 };
 
-export function useFieldArray<T extends FormValuesConstraint, S extends ValidationSchema<T>>({
+export function useFieldArray<T extends UnknownRecord, S extends ValidationSchema<T>>({
   initialValues,
   validationStrategy,
   validators,
