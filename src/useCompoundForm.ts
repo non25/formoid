@@ -1,16 +1,15 @@
 import { useRef, useState } from "react";
 import {
-  FormErrors,
   ValidatedValues,
   ValidationSchema,
   ValidationStrategy,
   makeFieldGroups,
   makeFieldProps,
-  validateFieldArray,
+  validateCompoundFieldArray,
   validateForm,
 } from "./Form";
-import { entries, forEach, map, some } from "./Record";
-import { Result, extract, failure, isFailure, isSuccess, success } from "./Result";
+import { forEach, map } from "./Record";
+import { isFailure, isSuccess } from "./Result";
 import { UseFieldArrayReturn } from "./useFieldArray";
 import { useFieldArrayState } from "./useFieldArrayState";
 import { UseFormReturn } from "./useForm";
@@ -208,46 +207,4 @@ export function useCompoundForm<
     handleSubmit,
     isSubmitting,
   };
-}
-
-/* Compound field array validation */
-type FieldArrayValidationFailure<FieldArrayValues extends FieldArrayValuesConstraint> = {
-  [K in keyof FieldArrayValues]: Array<FormErrors<FieldArrayValues[K][number]> | null> | null;
-};
-
-type CompoundFieldArrayValidationResult<
-  FieldArrayValues extends FieldArrayValuesConstraint,
-  FieldArraySchema extends FieldArrayValidationSchema<FieldArrayValues>,
-> = Result<
-  FieldArrayValidationFailure<FieldArrayValues>,
-  FieldArrayValidatedValues<FieldArrayValues, FieldArraySchema>
->;
-
-export async function validateCompoundFieldArray<
-  FieldArrayValues extends FieldArrayValuesConstraint,
-  FieldArraySchema extends FieldArrayValidationSchema<FieldArrayValues>,
->(
-  values: FieldArrayValues,
-  schema: FieldArraySchema,
-): Promise<CompoundFieldArrayValidationResult<FieldArrayValues, FieldArraySchema>> {
-  const validationEntries = await Promise.all(
-    entries(values).map(([key, values]) =>
-      validateFieldArray(values, schema[key]).then((result) => [key, result] as const),
-    ),
-  );
-  const result = Object.fromEntries(validationEntries);
-
-  const hasErrors = some(result, isFailure);
-
-  if (hasErrors) {
-    return failure(
-      map(result, (value) =>
-        isFailure(value) ? value.failure : null,
-      ) as FieldArrayValidationFailure<FieldArrayValues>,
-    );
-  }
-
-  return success(
-    map(result, extract) as FieldArrayValidatedValues<FieldArrayValues, FieldArraySchema>,
-  );
 }

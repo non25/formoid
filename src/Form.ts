@@ -1,5 +1,5 @@
 import { NonEmptyArray } from "./Array";
-import { map, some } from "./Record";
+import { entries, map, some } from "./Record";
 import { Result, extract, failure, isFailure, success } from "./Result";
 import { useFieldArrayState } from "./useFieldArrayState";
 import { useFormState } from "./useFormState";
@@ -271,4 +271,66 @@ export async function validateFieldArray<T, S extends ValidationSchema<T>>(
   const hasErrors = result.errors.some((groupErrors) => groupErrors !== null);
 
   return hasErrors ? failure(result.errors) : success(result.values);
+}
+
+/* Compound field array validation */
+type FieldArrayValuesConstraint = Record<string, Array<unknown>>;
+
+type FieldArrayValidationSchema<FieldArrayValues extends FieldArrayValuesConstraint> = {
+  [K in keyof FieldArrayValues]: ValidationSchema<FieldArrayValues[K][number]>;
+};
+
+type FieldArrayValidationFailure<FieldArrayValues extends FieldArrayValuesConstraint> = {
+  [K in keyof FieldArrayValues]: Array<FormErrors<FieldArrayValues[K][number]> | null> | null;
+};
+
+type FieldArrayValidatedValues<
+  FieldArrayValues extends FieldArrayValuesConstraint,
+  FieldArraySchema extends FieldArrayValidationSchema<FieldArrayValues>,
+> = {
+  [K in keyof FieldArrayValues]: Array<
+    ValidatedValues<
+      FieldArrayValues[K][number],
+      FieldArraySchema[K] extends ValidationSchema<FieldArrayValues[K][number]>
+        ? FieldArraySchema[K]
+        : ValidationSchema<FieldArrayValues[K][number]>
+    >
+  >;
+};
+
+type CompoundFieldArrayValidationResult<
+  FieldArrayValues extends FieldArrayValuesConstraint,
+  FieldArraySchema extends FieldArrayValidationSchema<FieldArrayValues>,
+> = Result<
+  FieldArrayValidationFailure<FieldArrayValues>,
+  FieldArrayValidatedValues<FieldArrayValues, FieldArraySchema>
+>;
+
+export async function validateCompoundFieldArray<
+  FieldArrayValues extends FieldArrayValuesConstraint,
+  FieldArraySchema extends FieldArrayValidationSchema<FieldArrayValues>,
+>(
+  values: FieldArrayValues,
+  schema: FieldArraySchema,
+): Promise<CompoundFieldArrayValidationResult<FieldArrayValues, FieldArraySchema>> {
+  const validationEntries = await Promise.all(
+    entries(values).map(([key, values]) =>
+      validateFieldArray(values, schema[key]).then((result) => [key, result] as const),
+    ),
+  );
+  const result = Object.fromEntries(validationEntries);
+
+  const hasErrors = some(result, isFailure);
+
+  if (hasErrors) {
+    return failure(
+      map(result, (value) =>
+        isFailure(value) ? value.failure : null,
+      ) as FieldArrayValidationFailure<FieldArrayValues>,
+    );
+  }
+
+  return success(
+    map(result, extract) as FieldArrayValidatedValues<FieldArrayValues, FieldArraySchema>,
+  );
 }
