@@ -53,13 +53,17 @@ type OnSubmit<
   (data: K extends "Form" ? ValidatedValues<T, S> : Array<ValidatedValues<T, S>>): Promise<unknown>;
 };
 
+type OnFailure<K extends "Form" | "FieldArray", T extends UnknownRecord> = {
+  (errors: K extends "Form" ? FormErrors<T> : Array<FormErrors<T> | null>): unknown;
+};
+
 type OnSubmitMatch<
   K extends "Form" | "FieldArray",
   T extends UnknownRecord,
   S extends ValidationSchema<T>,
 > = {
   onSuccess: OnSubmit<K, T, S>;
-  onFailure: () => unknown;
+  onFailure: OnFailure<K, T>;
 };
 
 export type HandleSubmit<

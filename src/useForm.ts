@@ -56,7 +56,7 @@ export function useForm<T extends UnknownRecord, S extends ValidationSchema<T>>(
         toggle("enable");
 
         if ("onFailure" in onSubmit) {
-          onSubmit.onFailure();
+          onSubmit.onFailure(result.failure);
         }
       } else {
         const submit = onSubmit instanceof Function ? onSubmit : onSubmit.onSuccess;
