@@ -9,6 +9,8 @@ import {
   makeFieldProps,
   validateCompoundFieldArray,
   validateForm,
+  FormErrors,
+  FieldArrayValidationFailure,
 } from "./Form";
 import { UnknownRecord, forEach, map } from "./Record";
 import { isFailure, isSuccess } from "./Result";
@@ -79,13 +81,20 @@ type OnSubmit<
   >,
 ) => Promise<unknown>;
 
+type OnFailure<FormValues extends UnknownRecord, FieldArrayValues extends UnknownFieldArray> = (
+  errors: CompoundValues<
+    FormErrors<FormValues> | null,
+    FieldArrayValidationFailure<FieldArrayValues> | null
+  >,
+) => unknown;
+
 type OnSubmitMatch<
   FormValues extends UnknownRecord,
   FormSchema extends ValidationSchema<FormValues>,
   FieldArrayValues extends UnknownFieldArray,
   FieldArraySchema extends FieldArrayValidationSchema<FieldArrayValues>,
 > = {
-  onFailure: () => unknown;
+  onFailure: OnFailure<FormValues, FieldArrayValues>;
   onSuccess: OnSubmit<FormValues, FormSchema, FieldArrayValues, FieldArraySchema>;
 };
 
@@ -107,6 +116,7 @@ type UseCompoundFormReturn<
 > = {
   fieldArray: FieldArrayReturn<FieldArrayValues>;
   form: Omit<UseFormReturn<FormValues, never>, RedundantFields>;
+  handleReset: () => void;
   handleSubmit: HandleSubmit<FormValues, FormSchema, FieldArrayValues, FieldArraySchema>;
   isSubmitting: boolean;
 };
@@ -150,6 +160,11 @@ export function useCompoundForm<
     values: state.values,
   }));
 
+  const handleReset = () => {
+    form.reset();
+    forEach(fieldArray, (item) => item.reset());
+  };
+
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const toggle: Toggle = (action) => {
@@ -169,15 +184,22 @@ export function useCompoundForm<
       if (isSuccess(formResult) && isSuccess(fieldArrayResult)) {
         const submit = onSubmit instanceof Function ? onSubmit : onSubmit.onSuccess;
 
-        submit({ form: formResult.success, fieldArray: fieldArrayResult.success }).finally(() =>
-          toggle("enable"),
-        );
+        submit({ form: formResult.success, fieldArray: fieldArrayResult.success }).finally(() => {
+          toggle("enable");
+        });
       } else {
+        const errors = {
+          form: null as FormErrors<FormValues> | null,
+          fieldArray: null as FieldArrayValidationFailure<FieldArrayValues> | null,
+        };
+
         if (isFailure(formResult)) {
+          errors.form = formResult.failure;
           form.propagateErrors(formResult.failure);
         }
 
         if (isFailure(fieldArrayResult)) {
+          errors.fieldArray = fieldArrayResult.failure;
           forEach(fieldArrayResult.failure, (errors, key) => {
             fieldArray[key].propagateErrors(errors ?? []);
           });
@@ -187,7 +209,7 @@ export function useCompoundForm<
 
         if (onSubmit instanceof Function) return;
 
-        onSubmit.onFailure();
+        onSubmit.onFailure(errors);
       }
     });
   };
@@ -202,6 +224,7 @@ export function useCompoundForm<
       setValues: form.setValues,
       values: form.values,
     },
+    handleReset,
     handleSubmit,
     isSubmitting,
   };

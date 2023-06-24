@@ -280,7 +280,7 @@ type FieldArrayValidationSchema<FieldArrayValues extends UnknownFieldArray> = {
   [K in keyof FieldArrayValues]: ValidationSchema<FieldArrayValues[K][number]>;
 };
 
-type FieldArrayValidationFailure<FieldArrayValues extends UnknownFieldArray> = {
+export type FieldArrayValidationFailure<FieldArrayValues extends UnknownFieldArray> = {
   [K in keyof FieldArrayValues]: Array<FormErrors<FieldArrayValues[K][number]> | null> | null;
 };
 
