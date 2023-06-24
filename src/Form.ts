@@ -1,5 +1,5 @@
 import { NonEmptyArray } from "./Array";
-import { mapValues, some } from "./Record";
+import { map, some } from "./Record";
 import { Result, extract, failure, isFailure, success } from "./Result";
 import { useFieldArrayState } from "./useFieldArrayState";
 import { useFormState } from "./useFormState";
@@ -177,7 +177,7 @@ export function makeFieldGroups<T, S extends ValidationSchema<T>>({
   }
 
   return fieldArray.state.map((groupState, index) => {
-    return mapValues(groupState, (group, key) => {
+    return map(groupState, (group, key) => {
       return {
         ...group,
         onBlur: () => {
@@ -231,11 +231,11 @@ export async function validateForm<T, S extends ValidationSchema<T>>(
 
   if (hasErrors) {
     return failure(
-      mapValues(result, (value) => (isFailure(value) ? value.failure : null)) as FormErrors<T>,
+      map(result, (value) => (isFailure(value) ? value.failure : null)) as FormErrors<T>,
     );
   }
 
-  return success(mapValues(result, extract) as ValidatedValues<T, S>);
+  return success(map(result, extract) as ValidatedValues<T, S>);
 }
 
 /* Field array validation */

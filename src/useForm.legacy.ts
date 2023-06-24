@@ -12,7 +12,7 @@ import {
   validateFieldArray,
   validateForm,
 } from "./Form";
-import { mapValues } from "./Record";
+import { map } from "./Record";
 import { isFailure, isSuccess } from "./Result";
 import { useFieldArrayState } from "./useFieldArrayState";
 import { useFormState } from "./useFormState";
@@ -205,7 +205,7 @@ export function useForm<
 
   const fieldGroups: Array<FieldGroup<FieldArrayValues>> = useMemo(() => {
     return fieldArray.state.map((groupState, index) => {
-      return mapValues(groupState, (group, key) => {
+      return map(groupState, (group, key) => {
         function validate() {
           const validator = fieldArrayValidationSchema?.[key] as
             | Validator<FieldArrayValues[typeof key], unknown>

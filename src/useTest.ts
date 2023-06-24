@@ -9,7 +9,7 @@ import {
   validateFieldArray,
   validateForm,
 } from "./Form";
-import { entries, mapValues, some } from "./Record";
+import { entries, forEach, map, some } from "./Record";
 import { Result, extract, failure, isFailure, isSuccess, success } from "./Result";
 import { UseFieldArrayReturn } from "./useFieldArray";
 import { useFieldArrayState } from "./useFieldArrayState";
@@ -31,7 +31,7 @@ type FieldArrayValidationSchema<FieldArrayValues extends FieldArrayValuesConstra
   [K in keyof FieldArrayValues]: ValidationSchema<FieldArrayValues[K][number]>;
 };
 
-type Config<
+type UseCompoundFormConfig<
   FormValues extends FormValuesConstraint,
   FormSchema extends ValidationSchema<FormValues>,
   FieldArrayValues extends FieldArrayValuesConstraint,
@@ -75,14 +75,12 @@ type OnSubmit<
   FormSchema extends ValidationSchema<FormValues>,
   FieldArrayValues extends FieldArrayValuesConstraint,
   FieldArraySchema extends FieldArrayValidationSchema<FieldArrayValues>,
-> = {
-  (
-    values: CompoundValues<
-      ValidatedValues<FormValues, FormSchema>,
-      FieldArrayValidatedValues<FieldArrayValues, FieldArraySchema>
-    >,
-  ): Promise<unknown>;
-};
+> = (
+  values: CompoundValues<
+    ValidatedValues<FormValues, FormSchema>,
+    FieldArrayValidatedValues<FieldArrayValues, FieldArraySchema>
+  >,
+) => Promise<unknown>;
 
 type OnSubmitMatch<
   FormValues extends FormValuesConstraint,
@@ -104,7 +102,7 @@ type HandleSubmit<
   (onSubmit: OnSubmitMatch<FormValues, FormSchema, FieldArrayValues, FieldArraySchema>): void;
 };
 
-type Return<
+type UseCompoundFormReturn<
   FormValues extends FormValuesConstraint,
   FormSchema extends ValidationSchema<FormValues>,
   FieldArrayValues extends FieldArrayValuesConstraint,
@@ -122,27 +120,17 @@ export function useCompoundForm<
   FieldArrayValues extends FieldArrayValuesConstraint,
   FieldArraySchema extends FieldArrayValidationSchema<FieldArrayValues>,
 >(
-  config: Config<FormValues, FormSchema, FieldArrayValues, FieldArraySchema>,
-): Return<FormValues, FormSchema, FieldArrayValues, FieldArraySchema> {
+  config: UseCompoundFormConfig<FormValues, FormSchema, FieldArrayValues, FieldArraySchema>,
+): UseCompoundFormReturn<FormValues, FormSchema, FieldArrayValues, FieldArraySchema> {
   const ref = useRef(config);
   const { form: formConfig, fieldArray: fieldArrayConfig } = ref.current;
 
-  type CompoundFieldArrayState = {
-    [K in keyof FieldArrayValues]: ReturnType<
-      typeof useFieldArrayState<FieldArrayValues[K][number]>
-    >;
-  };
-
   const form = useFormState(formConfig.initialValues);
-
-  const fieldArray = mapValues(
-    fieldArrayConfig.initialValues,
-    useFieldArrayState,
-  ) satisfies CompoundFieldArrayState;
+  const fieldArray = map(fieldArrayConfig.initialValues, useFieldArrayState);
 
   const values: CompoundValues<FormValues, FieldArrayValues> = {
     form: form.values,
-    fieldArray: mapValues(fieldArray, ({ values }) => values) as FieldArrayValues,
+    fieldArray: map(fieldArray, ({ values }) => values) as FieldArrayValues,
   };
 
   const fieldProps = makeFieldProps({
@@ -150,8 +138,7 @@ export function useCompoundForm<
     schema: formConfig.validators(values),
     validationStrategy: formConfig.validationStrategy,
   });
-
-  const compoundFieldArray = mapValues(fieldArray, (state, key) => ({
+  const compoundFieldArray: FieldArrayReturn<FieldArrayValues> = map(fieldArray, (state, key) => ({
     append: state.append,
     errors: state.errors,
     groups: makeFieldGroups({
@@ -164,17 +151,14 @@ export function useCompoundForm<
     setErrors: state.setErrors,
     setValues: state.setValues,
     values: state.values,
-  })) satisfies FieldArrayReturn<FieldArrayValues>;
+  }));
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   function toggle(action: "enable" | "disable") {
     setIsSubmitting(action === "disable");
     form.toggle(action);
-
-    for (const key in fieldArray) {
-      fieldArray[key].toggle(action);
-    }
+    forEach(fieldArray, (item) => item.toggle(action));
   }
 
   const handleSubmit: HandleSubmit<FormValues, FormSchema, FieldArrayValues, FieldArraySchema> = (
@@ -197,9 +181,9 @@ export function useCompoundForm<
         }
 
         if (isFailure(fieldArrayResult)) {
-          for (const key in fieldArrayResult.failure) {
-            fieldArray[key].propagateErrors(fieldArrayResult.failure[key] ?? []);
-          }
+          forEach(fieldArrayResult.failure, (errors, key) => {
+            fieldArray[key].propagateErrors(errors ?? []);
+          });
         }
 
         toggle("enable");
@@ -246,23 +230,24 @@ export async function validateCompoundFieldArray<
   values: FieldArrayValues,
   schema: FieldArraySchema,
 ): Promise<CompoundFieldArrayValidationResult<FieldArrayValues, FieldArraySchema>> {
-  return Promise.all(
-    entries(values).map(([key, values]) => {
-      return validateFieldArray(values, schema[key]).then((result) => [key, result] as const);
-    }),
-  )
-    .then((result) => Object.fromEntries(result))
-    .then((result) => {
-      const hasErrors = some(result, isFailure);
+  const validationEntries = await Promise.all(
+    entries(values).map(([key, values]) =>
+      validateFieldArray(values, schema[key]).then((result) => [key, result] as const),
+    ),
+  );
+  const result = Object.fromEntries(validationEntries);
 
-      if (hasErrors) {
-        const errors = mapValues(result, (value) => (isFailure(value) ? value.failure : null));
+  const hasErrors = some(result, isFailure);
 
-        return failure(errors as FieldArrayValidationFailure<FieldArrayValues>);
-      }
+  if (hasErrors) {
+    return failure(
+      map(result, (value) =>
+        isFailure(value) ? value.failure : null,
+      ) as FieldArrayValidationFailure<FieldArrayValues>,
+    );
+  }
 
-      return success(
-        mapValues(result, extract) as FieldArrayValidatedValues<FieldArrayValues, FieldArraySchema>,
-      );
-    });
+  return success(
+    map(result, extract) as FieldArrayValidatedValues<FieldArrayValues, FieldArraySchema>,
+  );
 }
