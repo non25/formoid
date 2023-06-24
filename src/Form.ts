@@ -19,23 +19,23 @@ export type FieldProps<T> = FieldState<T> & {
   onChange: (value: T) => void;
 };
 
-export type FormState<T> = {
+export type FormState<T extends UnknownRecord> = {
   [K in keyof T]: FieldState<T[K]>;
 };
 
-export type FieldGroup<T> = {
+export type FieldGroup<T extends UnknownRecord> = {
   [K in keyof T]: FieldProps<T[K]>;
 };
 
-export type FormErrors<T> = {
+export type FormErrors<T extends UnknownRecord> = {
   [K in keyof T]: FieldState<T>["errors"];
 };
 
-export type SetErrors<T> = {
+export type SetErrors<T extends UnknownRecord> = {
   (key: keyof T, errors: NonEmptyArray<string> | null): void;
 };
 
-export type SetFieldArrayErrors<T> = {
+export type SetFieldArrayErrors<T extends UnknownRecord> = {
   (index: number, key: keyof T, errors: NonEmptyArray<string> | null): void;
 };
 
@@ -71,42 +71,32 @@ export type HandleSubmit<
   (onSubmit: OnSubmitMatch<K, T, S>): void;
 };
 
-export function initializeForm<T>(values: T): FormState<T> {
-  const result = {} as FormState<T>;
-
-  for (const key in values) {
-    result[key] = { disabled: false, errors: null, touched: false, value: values[key] };
-  }
-
-  return result;
+/* Utils */
+function initializeField<T>(value: T): FieldState<T> {
+  return { disabled: false, errors: null, touched: false, value };
 }
 
-export function getValues<T>(formState: FormState<T>): T {
-  const result = {} as T;
-
-  for (const key in formState) result[key] = formState[key].value;
-
-  return result;
+export function initializeForm<T extends UnknownRecord>(values: T): FormState<T> {
+  return map(values, initializeField) as FormState<T>;
 }
 
-export function updateValues<T>(formState: FormState<T>, values: T): FormState<T> {
-  const result = {} as FormState<T>;
-
-  for (const key in formState) result[key] = Object.assign(formState[key], { value: values[key] });
-
-  return result;
+export function getValues<T extends UnknownRecord>(formState: FormState<T>): T {
+  return map(formState, ({ value }) => value) as T;
 }
 
-export function getErrors<T>(formState: FormState<T>): FormErrors<T> {
-  const result = {} as FormErrors<T>;
+export function updateValues<T extends UnknownRecord>(
+  formState: FormState<T>,
+  values: T,
+): FormState<T> {
+  return map(formState, (s, k) => Object.assign(s, { value: values[k] })) as FormState<T>;
+}
 
-  for (const key in formState) result[key] = formState[key].errors;
-
-  return result;
+export function getErrors<T extends UnknownRecord>(formState: FormState<T>): FormErrors<T> {
+  return map(formState, ({ errors }) => errors);
 }
 
 /* State manager */
-export function formStateManager<T>(state: FormState<T>) {
+export function formStateManager<T extends UnknownRecord>(state: FormState<T>) {
   return {
     blur: <K extends keyof T>(key: K): FormState<T> => ({
       ...state,
