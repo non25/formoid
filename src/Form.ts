@@ -29,21 +29,21 @@ export type FormErrors<T> = {
   [K in keyof T]: FieldState<T>["errors"];
 };
 
-export type SetErrors<T> = (key: keyof T, errors: NonEmptyArray<string> | null) => void;
+export type SetErrors<T> = {
+  (key: keyof T, errors: NonEmptyArray<string> | null): void;
+};
 
-export type SetFieldArrayErrors<T> = (
-  index: number,
-  key: keyof T,
-  errors: NonEmptyArray<string> | null,
-) => void;
+export type SetFieldArrayErrors<T> = {
+  (index: number, key: keyof T, errors: NonEmptyArray<string> | null): void;
+};
 
 export type Update<Values> = (values: Values) => Values;
 
 export type ValidationStrategy = "onChange" | "onBlur" | "onSubmit";
 
-type OnSubmit<K extends "Form" | "FieldArray", T, S extends ValidationSchema<T>> = K extends "Form"
-  ? (data: ValidatedValues<T, S>) => Promise<unknown>
-  : (data: Array<ValidatedValues<T, S>>) => Promise<unknown>;
+type OnSubmit<K extends "Form" | "FieldArray", T, S extends ValidationSchema<T>> = {
+  (data: K extends "Form" ? ValidatedValues<T, S> : Array<ValidatedValues<T, S>>): Promise<unknown>;
+};
 
 type OnSubmitMatch<K extends "Form" | "FieldArray", T, S extends ValidationSchema<T>> = {
   onSuccess: OnSubmit<K, T, S>;
@@ -55,11 +55,11 @@ export type HandleSubmit<K extends "Form" | "FieldArray", T, S extends Validatio
   (onSubmit: OnSubmitMatch<K, T, S>): void;
 };
 
-export function initializeForm<T>(data: T): FormState<T> {
+export function initializeForm<T>(values: T): FormState<T> {
   const result = {} as FormState<T>;
 
-  for (const key in data) {
-    result[key] = { disabled: false, errors: null, touched: false, value: data[key] };
+  for (const key in values) {
+    result[key] = { disabled: false, errors: null, touched: false, value: values[key] };
   }
 
   return result;
