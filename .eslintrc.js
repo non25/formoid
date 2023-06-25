@@ -1,50 +1,38 @@
 module.exports = {
-  extends: ["plugin:prettier/recommended"],
-  plugins: ["prettier"],
+  extends: [
+    "eslint:recommended",
+    "plugin:@typescript-eslint/recommended",
+    "plugin:prettier/recommended",
+    "plugin:react-hooks/recommended",
+    "plugin:react/recommended",
+  ],
+  ignorePatterns: [".eslintrc.js", "vitest.config.ts"],
+  parser: "@typescript-eslint/parser",
+  parserOptions: {
+    project: ["./tsconfig.json"],
+  },
+  plugins: ["@typescript-eslint", "prettier", "react"],
   root: true,
   rules: {
-    "prettier/prettier": "warn",
-  },
-  overrides: [
-    {
-      files: ["*.js"],
-      parserOptions: {
-        ecmaVersion: 2018,
-        sourceType: "module",
-      },
-    },
-    {
-      extends: [
-        "eslint:recommended",
-        "plugin:@typescript-eslint/recommended",
-        "plugin:react-hooks/recommended",
-        "plugin:react/recommended",
-      ],
-      files: ["./**/*.ts*"],
-      parser: "@typescript-eslint/parser",
-      parserOptions: {
-        project: ["./tsconfig.json"],
-      },
-      plugins: ["@typescript-eslint", "react"],
-      rules: {
-        "@typescript-eslint/no-restricted-imports": [
-          "error",
+    "@typescript-eslint/no-restricted-imports": [
+      "error",
+      {
+        patterns: [
           {
-            patterns: [
-              {
-                group: ["./test-utils"],
-                message: "Importing test utilities is only permitted within test files.",
-              },
-            ],
+            group: ["./test-utils"],
+            message: "Importing test utilities is only permitted within test files.",
           },
         ],
       },
-      settings: {
-        react: {
-          version: "detect",
-        },
-      },
+    ],
+    "prettier/prettier": "warn",
+  },
+  settings: {
+    react: {
+      version: "detect",
     },
+  },
+  overrides: [
     {
       files: ["src/**/*.test.ts"],
       rules: {

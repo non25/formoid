@@ -12,7 +12,7 @@
   "scripts": {
     "build": "rimraf lib && tsc -p tsconfig.build.json",
     "format-build": "prettier --write --config .prettierrc ./lib/**/*.ts",
-    "lint": "eslint --fix './src/*.ts*'",
+    "lint": "eslint --fix src",
     "prepublish": "yarn lint && yarn test run && yarn build && yarn format-build",
     "test": "vitest",
     "watch": "tsc --watch"
