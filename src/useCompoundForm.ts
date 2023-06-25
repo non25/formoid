@@ -204,9 +204,9 @@ export function useCompoundForm<
 
         toggle("enable");
 
-        if (onSubmit instanceof Function) return;
-
-        onSubmit.onFailure(errors);
+        if ("onFailure" in onSubmit) {
+          onSubmit.onFailure(errors);
+        }
       }
     });
   };
