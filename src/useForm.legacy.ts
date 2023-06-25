@@ -12,7 +12,7 @@ import {
   validateFieldArray,
   validateForm,
 } from "./Form";
-import { UnknownRecord, map } from "./Record";
+import { UnknownRecord, forEach, map } from "./Record";
 import { isFailure, isSuccess } from "./Result";
 import { useFieldArrayState } from "./useFieldArrayState";
 import { useFormState } from "./useFormState";
@@ -238,25 +238,25 @@ export function useForm<
   const disableForm = useCallback((): void => {
     setIsSubmitting(true);
 
-    for (const key in form.values) form.disable(key);
+    forEach(form.values, (_, key) => form.disable(key));
 
     if (!isExtendedConfig(config)) return;
 
-    for (const [index] of fieldArray.values.entries()) {
-      for (const key in fieldArray.values[index]) fieldArray.disable(index, key);
-    }
+    fieldArray.values.forEach((values, index) => {
+      forEach(values, (_, key) => fieldArray.disable(index, key));
+    });
   }, [config, fieldArray, form]);
 
   const enableForm = useCallback((): void => {
     setIsSubmitting(false);
 
-    for (const key in form.values) form.enable(key);
+    forEach(form.values, (_, key) => form.enable(key));
 
     if (!isExtendedConfig(config)) return;
 
-    for (const [index] of fieldArray.values.entries()) {
-      for (const key in fieldArray.values[index]) fieldArray.enable(index, key);
-    }
+    fieldArray.values.forEach((values, index) => {
+      forEach(values, (_, key) => fieldArray.enable(index, key));
+    });
   }, [config, fieldArray, form]);
 
   function handleSubmit(onSubmit: OnSubmit<Values, Schema>): void;
