@@ -210,7 +210,7 @@ export function makeFieldGroups<T extends UnknownRecord, S extends ValidationSch
 }
 
 /* Generic record validation */
-export function validateRecord<T extends Record<string, Result<unknown, unknown>>, F, S>(
+function validateRecord<T extends Record<string, Result<unknown, unknown>>, F, S>(
   record: T,
 ): Result<F, S> {
   return some(record, isFailure)
