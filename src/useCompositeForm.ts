@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   UnknownFieldArray,
   Toggle,
@@ -130,7 +130,9 @@ export function useCompositeForm<
   config: UseCompositeFormConfig<FormValues, FormSchema, FieldArrayValues, FieldArraySchema>,
 ): UseCompositeFormReturn<FormValues, FormSchema, FieldArrayValues, FieldArraySchema> {
   const form = useFormState(config.form.initialValues);
-  const fieldArray = map(config.fieldArray.initialValues, useFieldArrayState);
+
+  const compositeFieldArrayInitialValues = useRef(config.fieldArray.initialValues);
+  const fieldArray = map(compositeFieldArrayInitialValues.current, useFieldArrayState);
 
   const values: CompositeValues<FormValues, FieldArrayValues> = {
     form: form.values,
