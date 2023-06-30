@@ -7,7 +7,7 @@ import {
   ValidationStrategy,
   makeFieldGroups,
   makeFieldProps,
-  validateCompoundFieldArray,
+  validateCompositeFieldArray,
   validateForm,
   FormErrors,
   FieldArrayValidationFailure,
@@ -21,7 +21,7 @@ import { useFormState } from "./useFormState";
 
 type RedundantFields = "handleSubmit" | "isSubmitting";
 
-type CompoundValues<FormValues, FieldArrayValues> = {
+type CompositeValues<FormValues, FieldArrayValues> = {
   form: FormValues;
   fieldArray: FieldArrayValues;
 };
@@ -30,7 +30,7 @@ type FieldArrayValidationSchema<FieldArrayValues extends UnknownFieldArray> = {
   [K in keyof FieldArrayValues]: ValidationSchema<FieldArrayValues[K][number]>;
 };
 
-type UseCompoundFormConfig<
+type UseCompositeFormConfig<
   FormValues extends UnknownRecord,
   FormSchema extends ValidationSchema<FormValues>,
   FieldArrayValues extends UnknownFieldArray,
@@ -39,12 +39,12 @@ type UseCompoundFormConfig<
   form: {
     initialValues: FormValues;
     validationStrategy: ValidationStrategy;
-    validators: (values: CompoundValues<FormValues, FieldArrayValues>) => FormSchema;
+    validators: (values: CompositeValues<FormValues, FieldArrayValues>) => FormSchema;
   };
   fieldArray: {
     initialValues: FieldArrayValues;
     validationStrategy: ValidationStrategy;
-    validators: (values: CompoundValues<FormValues, FieldArrayValues>) => FieldArraySchema;
+    validators: (values: CompositeValues<FormValues, FieldArrayValues>) => FieldArraySchema;
   };
 };
 
@@ -75,14 +75,14 @@ type OnSubmit<
   FieldArrayValues extends UnknownFieldArray,
   FieldArraySchema extends FieldArrayValidationSchema<FieldArrayValues>,
 > = (
-  values: CompoundValues<
+  values: CompositeValues<
     ValidatedValues<FormValues, FormSchema>,
     FieldArrayValidatedValues<FieldArrayValues, FieldArraySchema>
   >,
 ) => Promise<unknown>;
 
 type OnFailure<FormValues extends UnknownRecord, FieldArrayValues extends UnknownFieldArray> = (
-  errors: CompoundValues<
+  errors: CompositeValues<
     FormErrors<FormValues> | null,
     FieldArrayValidationFailure<FieldArrayValues> | null
   >,
@@ -108,7 +108,7 @@ type HandleSubmit<
   (onSubmit: OnSubmitMatch<FormValues, FormSchema, FieldArrayValues, FieldArraySchema>): void;
 };
 
-type UseCompoundFormReturn<
+type UseCompositeFormReturn<
   FormValues extends UnknownRecord,
   FormSchema extends ValidationSchema<FormValues>,
   FieldArrayValues extends UnknownFieldArray,
@@ -121,18 +121,18 @@ type UseCompoundFormReturn<
   isSubmitting: boolean;
 };
 
-export function useCompoundForm<
+export function useCompositeForm<
   FormValues extends UnknownRecord,
   FormSchema extends ValidationSchema<FormValues>,
   FieldArrayValues extends UnknownFieldArray,
   FieldArraySchema extends FieldArrayValidationSchema<FieldArrayValues>,
 >(
-  config: UseCompoundFormConfig<FormValues, FormSchema, FieldArrayValues, FieldArraySchema>,
-): UseCompoundFormReturn<FormValues, FormSchema, FieldArrayValues, FieldArraySchema> {
+  config: UseCompositeFormConfig<FormValues, FormSchema, FieldArrayValues, FieldArraySchema>,
+): UseCompositeFormReturn<FormValues, FormSchema, FieldArrayValues, FieldArraySchema> {
   const form = useFormState(config.form.initialValues);
   const fieldArray = map(config.fieldArray.initialValues, useFieldArrayState);
 
-  const values: CompoundValues<FormValues, FieldArrayValues> = {
+  const values: CompositeValues<FormValues, FieldArrayValues> = {
     form: form.values,
     fieldArray: map(fieldArray, ({ values }) => values) as FieldArrayValues,
   };
@@ -142,7 +142,7 @@ export function useCompoundForm<
     schema: config.form.validators(values),
     validationStrategy: config.form.validationStrategy,
   });
-  const compoundFieldArray: FieldArrayReturn<FieldArrayValues> = map(fieldArray, (state, key) => ({
+  const compositeFieldArray: FieldArrayReturn<FieldArrayValues> = map(fieldArray, (state, key) => ({
     append: state.append,
     errors: state.errors,
     groups: makeFieldGroups({
@@ -176,7 +176,7 @@ export function useCompoundForm<
     toggle("disable");
     Promise.all([
       validateForm(values.form, config.form.validators(values)),
-      validateCompoundFieldArray(values.fieldArray, config.fieldArray.validators(values)),
+      validateCompositeFieldArray(values.fieldArray, config.fieldArray.validators(values)),
     ]).then(([formResult, fieldArrayResult]) => {
       if (isSuccess(formResult) && isSuccess(fieldArrayResult)) {
         const submit = onSubmit instanceof Function ? onSubmit : onSubmit.onSuccess;
@@ -212,7 +212,7 @@ export function useCompoundForm<
   };
 
   return {
-    fieldArray: compoundFieldArray,
+    fieldArray: compositeFieldArray,
     form: {
       errors: form.errors,
       fieldProps,

@@ -279,7 +279,7 @@ export async function validateFieldArray<T extends UnknownRecord, S extends Vali
   return hasErrors ? failure(result.errors) : success(result.values);
 }
 
-/* Compound field array validation */
+/* Composite field array validation */
 type FieldArrayValidationSchema<FieldArrayValues extends UnknownFieldArray> = {
   [K in keyof FieldArrayValues]: ValidationSchema<FieldArrayValues[K][number]>;
 };
@@ -302,7 +302,7 @@ type FieldArrayValidatedValues<
   >;
 };
 
-type CompoundFieldArrayValidationResult<
+type CompositeFieldArrayValidationResult<
   FieldArrayValues extends UnknownFieldArray,
   FieldArraySchema extends FieldArrayValidationSchema<FieldArrayValues>,
 > = Result<
@@ -310,13 +310,13 @@ type CompoundFieldArrayValidationResult<
   FieldArrayValidatedValues<FieldArrayValues, FieldArraySchema>
 >;
 
-export async function validateCompoundFieldArray<
+export async function validateCompositeFieldArray<
   FieldArrayValues extends UnknownFieldArray,
   FieldArraySchema extends FieldArrayValidationSchema<FieldArrayValues>,
 >(
   values: FieldArrayValues,
   schema: FieldArraySchema,
-): Promise<CompoundFieldArrayValidationResult<FieldArrayValues, FieldArraySchema>> {
+): Promise<CompositeFieldArrayValidationResult<FieldArrayValues, FieldArraySchema>> {
   const validationEntries = entries(values).map(([key, values]) =>
     validateFieldArray(values, schema[key]).then((result) => [key, result] as const),
   );
