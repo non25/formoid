@@ -255,7 +255,7 @@ export function validateIf<I, O>(
 ): Validator<I, I | O>;
 
 export function validateIf<I, O>(predicate: Predicate<I>, innerValidator: Validator<I, O>) {
-  return (input: I) => (predicate(input) ? innerValidator(input) : Promise.resolve(success(input)));
+  return (input: I) => (predicate(input) ? innerValidator(input) : of(input));
 }
 
 /**
