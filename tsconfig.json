@@ -4,6 +4,7 @@
     "esModuleInterop": true,
     "module": "es6",
     "moduleResolution": "node",
+    "noErrorTruncation": true,
     "outDir": "lib",
     "rootDir": "src",
     "strict": true,
