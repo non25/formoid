@@ -60,6 +60,20 @@ export function chain<I, A, O>(ao: Validator<A, O>): (ia: Validator<I, A>) => Va
   return (ia) => (input) => flatMap(ia(input), ao);
 }
 
+export function orElse<I, O>(first: Validator<I, O>): (second: Validator<I, O>) => Validator<I, O>;
+
+export function orElse<I, O>(first: Validator<I, O>, second: Validator<I, O>): Validator<I, O>;
+
+export function orElse<I, O>(first: Validator<I, O>, second?: Validator<I, O>) {
+  if (second !== undefined) {
+    return function (input: I) {
+      return first(input).then((result) => (isFailure(result) ? second(input) : result));
+    };
+  }
+
+  return (second: Validator<I, O>) => orElse(first, second);
+}
+
 /**
  * Sequence
  *

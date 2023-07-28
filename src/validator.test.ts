@@ -1,8 +1,10 @@
 import { failure, success } from "./Result";
 import { nonEmptyStringValidator, pipe } from "./test-utils";
 import {
+  orElse,
   chain,
   defined,
+  fromPredicate,
   lengthRange,
   match,
   maxLength,
@@ -107,6 +109,30 @@ describe("validator", () => {
       expect(validator("Aa1")).resolves.toEqual(
         failure(["Password length must be between 8 and 64 chars!"]),
       );
+    });
+  });
+
+  describe("orElse", () => {
+    it("should apply second validator if value is a non-blank string", () => {
+      const validator = pipe(
+        minLength(10, "At least 10 chars"),
+        orElse(fromPredicate((value: string) => value.trim().length === 0, "Field is not blank")),
+      );
+      expect(validator("")).resolves.toEqual(success(""));
+      expect(validator("characters")).resolves.toEqual(success("characters"));
+      expect(validator("string")).resolves.toEqual(failure(["At least 10 chars"]));
+    });
+
+    it("should apply second validator if value is not null", () => {
+      const validator = pipe(
+        defined<string | null>("This field is required"),
+        chain(minLength(10, "At least 10 chars")),
+        orElse(fromPredicate((value) => value === null, "Field is not empty")),
+      );
+      expect(validator(null)).resolves.toEqual(success(null));
+      expect(validator("characters")).resolves.toEqual(success("characters"));
+      expect(validator("")).resolves.toEqual(failure(["At least 10 chars"]));
+      expect(validator("string")).resolves.toEqual(failure(["At least 10 chars"]));
     });
   });
 });
