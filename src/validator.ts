@@ -250,29 +250,6 @@ export function defined<A>(message: string): Validator<A, NonNullable<A>> {
 }
 
 /**
- * Apply validator if predicate/refinement returns true, otherwise treat value as valid
- *
- * Example:
- * Validate whether value's length is >= 5 only if value is a non-blank string,
- * otherwise treat value as valid
- *
- * const result = validator.validateIf(isNonBlankString, validator.minLength(5));
- */
-export function validateIf<A, B extends A, O>(
-  refinement: Refinement<A, B>,
-  innerValidator: Validator<B, O>,
-): Validator<A, A | O>;
-
-export function validateIf<I, O>(
-  predicate: Predicate<I>,
-  innerValidator: Validator<I, O>,
-): Validator<I, I | O>;
-
-export function validateIf<I, O>(predicate: Predicate<I>, innerValidator: Validator<I, O>) {
-  return (input: I) => (predicate(input) ? innerValidator(input) : of(input));
-}
-
-/**
  * Basic validators
  */
 export function min<T extends number>(min: number, message: string): Validator<T, T> {
