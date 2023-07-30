@@ -1,23 +1,12 @@
 import { NonEmptyArray, isNonEmpty, of as arrayOf } from "./Array";
 import { Predicate, Refinement } from "./Predicate";
-import {
-  Result,
-  failure,
-  isFailure,
-  isSuccess,
-  map,
-  fromPredicate as resultFromPredicate,
-  success,
-} from "./Result";
+import { Result, failure, isFailure, isSuccess, map, fromPredicate as resultFromPredicate, success } from "./Result";
 
 export type Validator<I, O> = (input: I) => Promise<Result<NonEmptyArray<string>, O>>;
 
 export const of = <T>(value: T): ReturnType<Validator<T, T>> => Promise.resolve(success(value));
 
-export function fromPredicate<A, B extends A>(
-  predicate: Refinement<A, B>,
-  message: string,
-): Validator<A, B>;
+export function fromPredicate<A, B extends A>(predicate: Refinement<A, B>, message: string): Validator<A, B>;
 
 export function fromPredicate<A>(predicate: Predicate<A>, message: string): Validator<A, A>;
 
@@ -82,11 +71,7 @@ export function orElse<I, O>(first: Validator<I, O>, second?: Validator<I, O>) {
  */
 export function sequence<I, A, O>(a: Validator<I, A>, b: Validator<A, O>): Validator<I, O>;
 
-export function sequence<I, A, B, O>(
-  a: Validator<I, A>,
-  b: Validator<A, B>,
-  c: Validator<B, O>,
-): Validator<I, O>;
+export function sequence<I, A, B, O>(a: Validator<I, A>, b: Validator<A, B>, c: Validator<B, O>): Validator<I, O>;
 
 export function sequence<I, A, B, C, O>(
   a: Validator<I, A>,
@@ -145,14 +130,9 @@ export function sequence<I, A, B, C, D, E, F, G, H, O>(
   i: Validator<H, I>,
 ): Validator<I, O>;
 
-export function sequence(
-  ...validators: NonEmptyArray<Validator<unknown, unknown>>
-): Validator<unknown, unknown> {
+export function sequence(...validators: NonEmptyArray<Validator<unknown, unknown>>): Validator<unknown, unknown> {
   return function (input) {
-    return validators.reduce(
-      flatMap,
-      Promise.resolve(success(input)) as ReturnType<Validator<unknown, unknown>>,
-    );
+    return validators.reduce(flatMap, Promise.resolve(success(input)) as ReturnType<Validator<unknown, unknown>>);
   };
 }
 
@@ -163,11 +143,7 @@ export function sequence(
  */
 export function parallel<I, O>(a: Validator<I, O>, b: Validator<I, O>): Validator<I, O>;
 
-export function parallel<I, O>(
-  a: Validator<I, O>,
-  b: Validator<I, O>,
-  c: Validator<I, O>,
-): Validator<I, O>;
+export function parallel<I, O>(a: Validator<I, O>, b: Validator<I, O>, c: Validator<I, O>): Validator<I, O>;
 
 export function parallel<I, O>(
   a: Validator<I, O>,
@@ -226,12 +202,10 @@ export function parallel<I, O>(
   i: Validator<I, O>,
 ): Validator<I, O>;
 
-export function parallel<I, O>(
-  ...validators: NonEmptyArray<Validator<I, O>>
-): Validator<I, unknown> {
+export function parallel<I, O>(...validators: NonEmptyArray<Validator<I, O>>): Validator<I, unknown> {
   return async function (input) {
-    const failures = (await Promise.all(validators.map((validator) => validator(input)))).flatMap(
-      (result) => (isFailure(result) ? result.failure : []),
+    const failures = (await Promise.all(validators.map((validator) => validator(input)))).flatMap((result) =>
+      isFailure(result) ? result.failure : [],
     );
 
     return isNonEmpty(failures) ? failure(failures) : success(input);
@@ -260,11 +234,7 @@ export function max<T extends number>(max: number, message: string): Validator<T
   return fromPredicate((value: T) => value <= max, message);
 }
 
-export function range<T extends number>(
-  min: number,
-  max: number,
-  message: string,
-): Validator<T, T> {
+export function range<T extends number>(min: number, max: number, message: string): Validator<T, T> {
   return fromPredicate((value: T) => value >= min && value <= max, message);
 }
 
@@ -276,15 +246,8 @@ export function maxLength<T extends string>(max: number, message: string): Valid
   return fromPredicate((value: T) => value.trim().length <= max, message);
 }
 
-export function lengthRange<T extends string>(
-  min: number,
-  max: number,
-  message: string,
-): Validator<T, T> {
-  return fromPredicate(
-    (value: T) => value.trim().length >= min && value.trim().length <= max,
-    message,
-  );
+export function lengthRange<T extends string>(min: number, max: number, message: string): Validator<T, T> {
+  return fromPredicate((value: T) => value.trim().length >= min && value.trim().length <= max, message);
 }
 
 export function match<T extends string>(pattern: RegExp, message: string): Validator<T, T> {

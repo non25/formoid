@@ -45,11 +45,7 @@ export type Toggle = (action: "enable" | "disable") => void;
 
 export type ValidationStrategy = "onChange" | "onBlur" | "onSubmit";
 
-type OnSubmit<
-  K extends "Form" | "FieldArray",
-  T extends UnknownRecord,
-  S extends ValidationSchema<T>,
-> = {
+type OnSubmit<K extends "Form" | "FieldArray", T extends UnknownRecord, S extends ValidationSchema<T>> = {
   (data: K extends "Form" ? ValidatedValues<T, S> : Array<ValidatedValues<T, S>>): Promise<unknown>;
 };
 
@@ -57,20 +53,12 @@ type OnFailure<K extends "Form" | "FieldArray", T extends UnknownRecord> = {
   (errors: K extends "Form" ? FormErrors<T> : Array<FormErrors<T> | null>): unknown;
 };
 
-type OnSubmitMatch<
-  K extends "Form" | "FieldArray",
-  T extends UnknownRecord,
-  S extends ValidationSchema<T>,
-> = {
+type OnSubmitMatch<K extends "Form" | "FieldArray", T extends UnknownRecord, S extends ValidationSchema<T>> = {
   onSuccess: OnSubmit<K, T, S>;
   onFailure: OnFailure<K, T>;
 };
 
-export type HandleSubmit<
-  K extends "Form" | "FieldArray",
-  T extends UnknownRecord,
-  S extends ValidationSchema<T>,
-> = {
+export type HandleSubmit<K extends "Form" | "FieldArray", T extends UnknownRecord, S extends ValidationSchema<T>> = {
   (onSubmit: OnSubmit<K, T, S>): void;
   (onSubmit: OnSubmitMatch<K, T, S>): void;
 };
@@ -88,10 +76,7 @@ export function getValues<T extends UnknownRecord>(formState: FormState<T>): T {
   return map(formState, ({ value }) => value) as T;
 }
 
-export function updateValues<T extends UnknownRecord>(
-  formState: FormState<T>,
-  values: T,
-): FormState<T> {
+export function updateValues<T extends UnknownRecord>(formState: FormState<T>, values: T): FormState<T> {
   return map(formState, (s, k) => Object.assign(s, { value: values[k] })) as FormState<T>;
 }
 
@@ -210,9 +195,7 @@ export function makeFieldGroups<T extends UnknownRecord, S extends ValidationSch
 }
 
 /* Generic record validation */
-function validateRecord<T extends Record<string, Result<unknown, unknown>>, F, S>(
-  record: T,
-): Result<F, S> {
+function validateRecord<T extends Record<string, Result<unknown, unknown>>, F, S>(record: T): Result<F, S> {
   return some(record, isFailure)
     ? failure(map(record, (value) => (isFailure(value) ? value.failure : null)) as F)
     : success(map(record, extract) as S);
@@ -261,18 +244,19 @@ export async function validateFieldArray<T extends UnknownRecord, S extends Vali
     errors: [] as Array<FormErrors<T> | null>,
     values: [] as Array<ValidatedValues<T, S>>,
   };
-  const result = (
-    await Promise.all(values.map((groupValues) => validateForm(groupValues, schema)))
-  ).reduce((result, groupValidationResult) => {
-    if (isFailure(groupValidationResult)) {
-      result.errors.push(groupValidationResult.failure);
-    } else {
-      result.errors.push(null);
-      result.values.push(groupValidationResult.success);
-    }
+  const result = (await Promise.all(values.map((groupValues) => validateForm(groupValues, schema)))).reduce(
+    (result, groupValidationResult) => {
+      if (isFailure(groupValidationResult)) {
+        result.errors.push(groupValidationResult.failure);
+      } else {
+        result.errors.push(null);
+        result.values.push(groupValidationResult.success);
+      }
 
-    return result;
-  }, initial);
+      return result;
+    },
+    initial,
+  );
 
   const hasErrors = result.errors.some((groupErrors) => groupErrors !== null);
 

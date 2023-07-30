@@ -49,10 +49,7 @@ type UseCompositeFormConfig<
 };
 
 type FieldArrayReturn<FieldArrayValues extends UnknownFieldArray> = {
-  [K in keyof FieldArrayValues]: Omit<
-    UseFieldArrayReturn<FieldArrayValues[K][number], never>,
-    RedundantFields
-  >;
+  [K in keyof FieldArrayValues]: Omit<UseFieldArrayReturn<FieldArrayValues[K][number], never>, RedundantFields>;
 };
 
 type FieldArrayValidatedValues<
@@ -82,10 +79,7 @@ type OnSubmit<
 ) => Promise<unknown>;
 
 type OnFailure<FormValues extends UnknownRecord, FieldArrayValues extends UnknownFieldArray> = (
-  errors: CompositeValues<
-    FormErrors<FormValues> | null,
-    FieldArrayValidationFailure<FieldArrayValues> | null
-  >,
+  errors: CompositeValues<FormErrors<FormValues> | null, FieldArrayValidationFailure<FieldArrayValues> | null>,
 ) => unknown;
 
 type OnSubmitMatch<
@@ -172,9 +166,7 @@ export function useCompositeForm<
     forEach(fieldArray, (item) => item.toggle(action));
   };
 
-  const handleSubmit: HandleSubmit<FormValues, FormSchema, FieldArrayValues, FieldArraySchema> = (
-    onSubmit,
-  ) => {
+  const handleSubmit: HandleSubmit<FormValues, FormSchema, FieldArrayValues, FieldArraySchema> = (onSubmit) => {
     toggle("disable");
     Promise.all([
       validateForm(values.form, config.form.validators(values)),

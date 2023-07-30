@@ -36,9 +36,7 @@ describe("validator", () => {
         expect(validator(null)).resolves.toEqual(failure(["Value should be defined!"]));
         expect(validator("")).resolves.toEqual(failure(["Value should not be empty!"]));
         expect(validator("a")).resolves.toEqual(failure(["Value should be >= 8 chars long!"]));
-        expect(validator("aaaaaaaaaaaaaaaaa")).resolves.toEqual(
-          failure(["Value should be <= 16 chars long!"]),
-        );
+        expect(validator("aaaaaaaaaaaaaaaaa")).resolves.toEqual(failure(["Value should be <= 16 chars long!"]));
       });
     });
   });
@@ -58,12 +56,8 @@ describe("validator", () => {
       expect(validator(null)).resolves.toEqual(failure(["Value should be defined!"]));
       expect(validator("")).resolves.toEqual(failure(["Value should not be empty!"]));
       expect(validator("   ")).resolves.toEqual(failure(["Value should not be empty!"]));
-      expect(validator("a")).resolves.toEqual(
-        failure(["Value should be between [8, 16] chars long!"]),
-      );
-      expect(validator("aaaaaaaaaaaaaaaaa")).resolves.toEqual(
-        failure(["Value should be between [8, 16] chars long!"]),
-      );
+      expect(validator("a")).resolves.toEqual(failure(["Value should be between [8, 16] chars long!"]));
+      expect(validator("aaaaaaaaaaaaaaaaa")).resolves.toEqual(failure(["Value should be between [8, 16] chars long!"]));
     });
   });
 
@@ -101,14 +95,9 @@ describe("validator", () => {
         ]),
       );
       expect(validator("Aa")).resolves.toEqual(
-        failure([
-          "Password length must be between 8 and 64 chars!",
-          "Password must contain at least 1 digit!",
-        ]),
+        failure(["Password length must be between 8 and 64 chars!", "Password must contain at least 1 digit!"]),
       );
-      expect(validator("Aa1")).resolves.toEqual(
-        failure(["Password length must be between 8 and 64 chars!"]),
-      );
+      expect(validator("Aa1")).resolves.toEqual(failure(["Password length must be between 8 and 64 chars!"]));
     });
   });
 

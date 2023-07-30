@@ -46,9 +46,7 @@ describe("Form validation", () => {
           confirmPassword: null,
         }),
       );
-      expect(
-        result({ name: "Hello", password: "Admin123", confirmPassword: "aaa" }),
-      ).resolves.toEqual(
+      expect(result({ name: "Hello", password: "Admin123", confirmPassword: "aaa" })).resolves.toEqual(
         failure({
           name: null,
           password: null,
