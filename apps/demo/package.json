@@ -39,6 +39,7 @@
     "postcss": "^8.4.31",
     "postcss-loader": "^7.3.3",
     "prettier": "^3.0.3",
+    "prettier-config-formoid": "workspace:*",
     "prettier-plugin-tailwindcss": "^0.5.5",
     "react-refresh": "^0.14.0",
     "react-refresh-typescript": "^2.0.9",

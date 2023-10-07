@@ -90,6 +90,9 @@ importers:
       prettier:
         specifier: ^3.0.3
         version: 3.0.3
+      prettier-config-formoid:
+        specifier: workspace:*
+        version: link:../../packages/prettier-config-formoid
       prettier-plugin-tailwindcss:
         specifier: ^0.5.5
         version: 0.5.5(prettier@3.0.3)
@@ -178,6 +181,9 @@ importers:
       prettier:
         specifier: ^3.0.3
         version: 3.0.3
+      prettier-config-formoid:
+        specifier: workspace:*
+        version: link:../prettier-config-formoid
       rimraf:
         specifier: ^5.0.5
         version: 5.0.5
@@ -190,6 +196,12 @@ importers:
       vitest:
         specifier: ^0.34.6
         version: 0.34.6
+
+  packages/prettier-config-formoid:
+    devDependencies:
+      prettier:
+        specifier: ^3.0.3
+        version: 3.0.3
 
 packages:
 

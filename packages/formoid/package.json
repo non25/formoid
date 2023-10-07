@@ -25,6 +25,7 @@
     "@types/react": "^18.2.25",
     "eslint-config-formoid": "workspace:*",
     "prettier": "^3.0.3",
+    "prettier-config-formoid": "workspace:*",
     "rimraf": "^5.0.5",
     "tsup": "^7.2.0",
     "typescript": "^5.2.2",
