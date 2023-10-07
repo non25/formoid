@@ -7,7 +7,7 @@
     "analyze": "ANALYZE=true webpack",
     "build": "webpack --progress",
     "lint": "eslint --fix '*.js' './**/*.ts*'",
-    "start": "NODE_ENV=development webpack serve"
+    "watch": "NODE_ENV=development webpack serve"
   },
   "dependencies": {
     "@radix-ui/react-tooltip": "^1.0.6",
