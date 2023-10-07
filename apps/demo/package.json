@@ -6,7 +6,9 @@
   "scripts": {
     "analyze": "ANALYZE=true webpack",
     "build": "webpack --progress",
+    "deploy": "gh-pages -d build",
     "lint": "eslint --fix '*.js' './**/*.ts*'",
+    "predeploy": "pnpm build",
     "watch": "NODE_ENV=development webpack serve"
   },
   "dependencies": {
@@ -37,6 +39,7 @@
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-webpack-plugin": "^4.0.1",
     "fork-ts-checker-webpack-plugin": "^8.0.0",
+    "gh-pages": "^6.0.0",
     "html-webpack-plugin": "^5.5.3",
     "mini-css-extract-plugin": "^2.7.6",
     "postcss": "^8.4.24",
