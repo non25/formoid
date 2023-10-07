@@ -14,7 +14,7 @@
     "build": "rimraf lib && tsc -p tsconfig.build.json",
     "format-build": "prettier --write --config .prettierrc ./lib/**/*.ts",
     "lint": "eslint --fix src",
-    "prepublish": "yarn lint && yarn test run && yarn build && yarn format-build",
+    "prepublish": "pnpm lint && pnpm test run && pnpm build && pnpm format-build",
     "test": "vitest",
     "watch": "tsc --watch"
   },
@@ -35,6 +35,10 @@
   },
   "peerDependencies": {
     "react": "^18.1.0"
+  },
+  "engines": {
+    "node": ">=18",
+    "pnpm": ">=8"
   },
   "keywords": [
     "react",

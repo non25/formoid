@@ -3,7 +3,7 @@
 ## Installation
 
 ```
-yarn add formoid
+pnpm add formoid
 ```
 
 ## Example
