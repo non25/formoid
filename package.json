@@ -5,5 +5,8 @@
   "scripts": {
     "build": "pnpm run -r build",
     "watch": "pnpm run -r --parallel --stream watch"
+  },
+  "devDependencies": {
+    "@changesets/cli": "^2.26.2"
   }
 }
