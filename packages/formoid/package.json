@@ -14,7 +14,7 @@
   "scripts": {
     "build": "tsup",
     "clean": "rimraf lib",
-    "format-build": "prettier --write --config .prettierrc ./lib/**/*.mts",
+    "format-build": "prettier --write ./lib/**/*.mts",
     "lint": "eslint . --fix --max-warnings 0",
     "prepublish": "pnpm lint && pnpm test run && pnpm clean && pnpm build && pnpm format-build",
     "test": "vitest",
