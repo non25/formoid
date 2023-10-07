@@ -1,17 +1,6 @@
 module.exports = {
-  extends: [
-    "eslint:recommended",
-    "plugin:@typescript-eslint/recommended",
-    "plugin:prettier/recommended",
-    "plugin:react-hooks/recommended",
-    "plugin:react/recommended",
-  ],
+  extends: ["formoid/core"],
   ignorePatterns: [".eslintrc.js", "lib/*", "tsup.config.ts", "vitest.config.ts"],
-  parser: "@typescript-eslint/parser",
-  parserOptions: {
-    project: ["./tsconfig.json"],
-  },
-  plugins: ["@typescript-eslint", "prettier", "react"],
   root: true,
   rules: {
     "@typescript-eslint/no-restricted-imports": [
@@ -25,12 +14,6 @@ module.exports = {
         ],
       },
     ],
-    "prettier/prettier": "warn",
-  },
-  settings: {
-    react: {
-      version: "detect",
-    },
   },
   overrides: [
     {
