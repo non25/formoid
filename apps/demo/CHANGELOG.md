@@ -1,5 +1,11 @@
 # demo
 
+## 1.1.0
+
+### Minor Changes
+
+- Deploy demo app to Github Pages.
+
 ## 1.0.1
 
 ### Patch Changes
