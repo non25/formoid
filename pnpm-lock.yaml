@@ -6,6 +6,8 @@ settings:
 
 importers:
 
+  .: {}
+
   apps/demo:
     dependencies:
       '@radix-ui/react-tooltip':

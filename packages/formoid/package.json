@@ -1,6 +1,7 @@
 {
   "name": "formoid",
   "version": "2.0.0",
+  "license": "MIT",
   "main": "lib/index.js",
   "module": "lib/index.js",
   "types": "lib/index.d.ts",
@@ -9,7 +10,6 @@
   ],
   "author": "kolyamba2105 <haravetskyy@gmail.com>",
   "repository": "https://github.com/kolyamba2105/formoid",
-  "license": "MIT",
   "scripts": {
     "build": "rimraf lib && tsc -p tsconfig.build.json",
     "format-build": "prettier --write --config .prettierrc ./lib/**/*.ts",
