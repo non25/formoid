@@ -153,8 +153,7 @@ export default {
       "~": path.resolve(__dirname, "src"),
     },
     extensions: [".tsx", ".ts", ".js"],
-    modules: [path.resolve("./node_modules")],
-    symlinks: mode === "development",
+    symlinks: true,
   },
   /**
    * Control what bundle information gets displayed
