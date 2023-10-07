@@ -69,9 +69,7 @@ export const TextField = ({
         </Tooltip.Trigger>
         <Tooltip.Content className={css.error} side="top">
           <div className="flex flex-col gap-2">
-            {errors?.map((error, key) => (
-              <span key={key}>{error}</span>
-            ))}
+            {errors?.map((error, key) => <span key={key}>{error}</span>)}
           </div>
           <Tooltip.Arrow className="fill-red-400" />
         </Tooltip.Content>

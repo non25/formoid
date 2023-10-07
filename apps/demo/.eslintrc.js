@@ -1,40 +1,25 @@
 module.exports = {
-  extends: ["plugin:prettier/recommended"],
-  plugins: ["prettier"],
+  extends: [
+    "eslint:recommended",
+    "plugin:@typescript-eslint/recommended",
+    "plugin:prettier/recommended",
+    "plugin:react-hooks/recommended",
+    "plugin:react/recommended",
+  ],
+  ignorePatterns: [".eslintrc.js", "build/*", "tailwind.config.js", "webpack.config.ts"],
+  parser: "@typescript-eslint/parser",
+  parserOptions: {
+    project: ["./tsconfig.json"],
+  },
+  plugins: ["@typescript-eslint", "prettier", "react"],
   root: true,
   rules: {
     "prettier/prettier": "warn",
+    "react/react-in-jsx-scope": "off",
   },
-  ignorePatterns: ["webpack.config.ts"],
-  overrides: [
-    {
-      files: ["*.js"],
-      parserOptions: {
-        ecmaVersion: 2018,
-        sourceType: "module",
-      },
+  settings: {
+    react: {
+      version: "detect",
     },
-    {
-      extends: [
-        "eslint:recommended",
-        "plugin:@typescript-eslint/recommended",
-        "plugin:react-hooks/recommended",
-        "plugin:react/recommended",
-      ],
-      files: ["./**/*.ts*"],
-      parser: "@typescript-eslint/parser",
-      parserOptions: {
-        project: ["./tsconfig.json"],
-      },
-      plugins: ["@typescript-eslint", "react"],
-      rules: {
-        "react/react-in-jsx-scope": "off",
-      },
-      settings: {
-        react: {
-          version: "detect",
-        },
-      },
-    },
-  ],
+  },
 };

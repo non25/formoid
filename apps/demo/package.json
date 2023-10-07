@@ -5,9 +5,9 @@
   "private": true,
   "scripts": {
     "analyze": "ANALYZE=true webpack",
-    "build": "webpack --progress",
+    "build": "webpack",
     "deploy": "gh-pages -d build",
-    "lint": "eslint --fix '*.js' './**/*.ts*'",
+    "lint": "eslint . --fix --max-warnings 0",
     "predeploy": "pnpm build",
     "watch": "NODE_ENV=development webpack serve"
   },

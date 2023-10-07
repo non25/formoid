@@ -6,7 +6,7 @@ module.exports = {
     "plugin:react-hooks/recommended",
     "plugin:react/recommended",
   ],
-  ignorePatterns: [".eslintrc.js", "tsup.config.ts", "vitest.config.ts"],
+  ignorePatterns: [".eslintrc.js", "lib/*", "tsup.config.ts", "vitest.config.ts"],
   parser: "@typescript-eslint/parser",
   parserOptions: {
     project: ["./tsconfig.json"],
