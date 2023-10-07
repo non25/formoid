@@ -65,7 +65,7 @@ importers:
         version: 5.0.1(webpack@5.88.2)
       eslint-config-formoid:
         specifier: workspace:*
-        version: link:../../packages/eslint-config-formoid
+        version: link:../../packages/eslint-config
       eslint-webpack-plugin:
         specifier: ^4.0.1
         version: 4.0.1(eslint@8.51.0)(webpack@5.88.2)
@@ -92,7 +92,7 @@ importers:
         version: 3.0.3
       prettier-config-formoid:
         specifier: workspace:*
-        version: link:../../packages/prettier-config-formoid
+        version: link:../../packages/prettier-config
       prettier-plugin-tailwindcss:
         specifier: ^0.5.5
         version: 0.5.5(prettier@3.0.3)
@@ -139,7 +139,7 @@ importers:
         specifier: ^4.15.1
         version: 4.15.1(webpack-cli@5.1.4)(webpack@5.88.2)
 
-  packages/eslint-config-formoid:
+  packages/eslint-config:
     devDependencies:
       '@typescript-eslint/eslint-plugin':
         specifier: ^6.7.4
@@ -177,13 +177,13 @@ importers:
         version: 18.2.25
       eslint-config-formoid:
         specifier: workspace:*
-        version: link:../eslint-config-formoid
+        version: link:../eslint-config
       prettier:
         specifier: ^3.0.3
         version: 3.0.3
       prettier-config-formoid:
         specifier: workspace:*
-        version: link:../prettier-config-formoid
+        version: link:../prettier-config
       rimraf:
         specifier: ^5.0.5
         version: 5.0.5
@@ -197,7 +197,7 @@ importers:
         specifier: ^0.34.6
         version: 0.34.6
 
-  packages/prettier-config-formoid:
+  packages/prettier-config:
     devDependencies:
       prettier:
         specifier: ^3.0.3
