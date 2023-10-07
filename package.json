@@ -4,6 +4,7 @@
   "license": "MIT",
   "scripts": {
     "build": "pnpm run -r build",
+    "clean": "pnpm run -r clean",
     "lint": "pnpm run -r lint",
     "watch": "pnpm run -r --parallel --stream watch"
   },

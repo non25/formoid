@@ -6,9 +6,10 @@
   "scripts": {
     "analyze": "ANALYZE=true webpack",
     "build": "webpack",
+    "clean": "rimraf build",
     "deploy": "gh-pages -d build",
     "lint": "eslint . --fix --max-warnings 0",
-    "predeploy": "pnpm build",
+    "predeploy": "pnpm clean && pnpm build",
     "watch": "NODE_ENV=development webpack serve"
   },
   "dependencies": {
@@ -43,6 +44,7 @@
     "prettier-plugin-tailwindcss": "^0.5.5",
     "react-refresh": "^0.14.0",
     "react-refresh-typescript": "^2.0.9",
+    "rimraf": "^5.0.5",
     "sass": "^1.69.0",
     "sass-loader": "^13.3.2",
     "style-loader": "^3.3.3",
