@@ -125,8 +125,15 @@ export function makeFieldProps<T extends UnknownRecord, S extends ValidationSche
   function validate<K extends keyof T>(key: K) {
     const validator = schema[key] as Validator<T[K], unknown> | null;
 
-    validator?.(form.state[key].value).then((result) => {
-      form.setErrors(key, isFailure(result) ? result.failure : null);
+    if (!validator) {
+      return;
+    }
+
+    // make sure that we're reading ref after values were updated
+    setTimeout(() => {
+      validator(form.stateRef.current[key].value).then((result) => {
+        form.setErrors(key, isFailure(result) ? result.failure : null);
+      });
     });
   }
 

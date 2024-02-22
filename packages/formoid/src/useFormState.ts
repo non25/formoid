@@ -16,8 +16,13 @@ export function useFormState<T extends UnknownRecord>(initialValues: T) {
   const persistentInitialValues = useRef(initialValues);
   const [state, setState] = useState(initializeForm(persistentInitialValues.current));
 
+  const stateRef = useRef(state);
+
   const errors = useMemo(() => getErrors(state), [state]);
-  const values = useMemo(() => getValues(state), [state]);
+  const values = useMemo(() => {
+    stateRef.current = state;
+    return getValues(state);
+  }, [state]);
 
   const blur = useCallback(<K extends keyof T>(key: K) => {
     setState((state) => formStateManager(state).blur(key));
@@ -58,6 +63,7 @@ export function useFormState<T extends UnknownRecord>(initialValues: T) {
 
   return {
     state,
+    stateRef,
 
     errors,
     values,
