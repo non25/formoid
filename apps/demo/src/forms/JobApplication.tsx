@@ -1,6 +1,8 @@
-import { useCompositeForm, validator } from "formoid";
-import { TextField, Button } from "~/common/components";
+import { fromZodSchema, useCompositeForm, validator } from "formoid";
+import { z } from "zod";
+import { Button, TextField } from "~/common/components";
 import { customValidator, pipe } from "~/common/utils";
+import { isNonBlankString, isNonEmptyString } from "~/common/utils/refinements";
 
 type General = {
   name: string;
@@ -53,7 +55,7 @@ export function JobApplication() {
         ),
         lastName: validator.sequence(
           customValidator.nonBlankString(),
-          validator.maxLength(32, "Name should be <= 32 chars long"),
+          validator.maxLength(32, "Last Name should be <= 32 chars long"),
         ),
       }),
     },
@@ -63,26 +65,26 @@ export function JobApplication() {
         technologies: [emptyTechnology],
       },
       validationStrategy: "onBlur",
-      validators: ({ fieldArray }) => ({
-        experience: {
-          company: customValidator.nonBlankString(),
-          position: customValidator.nonBlankString(),
-        },
-        technologies: {
-          name: pipe(
-            customValidator.nonEmptyString(),
-            validator.chain(
-              validator.fromPredicate((value) => {
+      validators({ fieldArray }) {
+        return {
+          experience: fromZodSchema({
+            company: z.string().refine(isNonBlankString),
+            position: z.string().refine(isNonBlankString),
+          }),
+          technologies: fromZodSchema({
+            name: z
+              .string()
+              .refine(function (value) {
                 return isElementUnique(
                   fieldArray.technologies.map(({ name }) => name),
                   value,
                 );
-              }, "Please remove duplicates"),
-            ),
-          ),
-          years: customValidator.nonBlankString(),
-        },
-      }),
+              }, "Please remove duplicates")
+              .refine(isNonEmptyString),
+            years: z.string().transform(Number),
+          }),
+        };
+      },
     },
   });
 
