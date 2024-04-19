@@ -1,10 +1,24 @@
-import { NonEmptyArray, isNonEmpty, of as arrayOf } from "./Array";
+import { NonEmptyArray, of as arrayOf, isNonEmpty } from "./Array";
 import { Predicate, Refinement } from "./Predicate";
-import { Result, failure, isFailure, isSuccess, map, fromPredicate as resultFromPredicate, success } from "./Result";
+import {
+  Result,
+  isFailure,
+  isSuccess,
+  map,
+  failure as resultFailure,
+  fromPredicate as resultFromPredicate,
+  success as resultSuccess,
+} from "./Result";
 
 export type Validator<I, O> = (input: I) => Promise<Result<NonEmptyArray<string>, O>>;
 
-export const of = <T>(value: T): ReturnType<Validator<T, T>> => Promise.resolve(success(value));
+export const of = <T>(value: T): ReturnType<Validator<T, T>> => Promise.resolve(resultSuccess(value));
+
+export const success = of;
+
+export function failure<T>(errors: NonEmptyArray<string>): ReturnType<Validator<T, T>> {
+  return Promise.resolve(resultFailure(errors));
+}
 
 export function fromPredicate<A, B extends A>(predicate: Refinement<A, B>, message: string): Validator<A, B>;
 
@@ -22,9 +36,9 @@ export function tryCatch<I, A, O>(
 ): Validator<I, O> {
   return async function (input: I) {
     try {
-      return success(onSuccess(await action(input)));
+      return resultSuccess(onSuccess(await action(input)));
     } catch (issue) {
-      return failure(arrayOf(onFailure(issue)));
+      return resultFailure(arrayOf(onFailure(issue)));
     }
   };
 }
@@ -42,7 +56,7 @@ export function transform<I, A, B>(f: (a: A) => B, validator?: Validator<I, A>) 
 }
 
 function flatMap<A, B>(result: ReturnType<Validator<unknown, A>>, f: Validator<A, B>) {
-  return result.then((r) => (isSuccess(r) ? f(r.success) : failure(r.failure)));
+  return result.then((r) => (isSuccess(r) ? f(r.success) : resultFailure(r.failure)));
 }
 
 export function chain<I, A, O>(ao: Validator<A, O>): (ia: Validator<I, A>) => Validator<I, O> {
@@ -132,7 +146,7 @@ export function sequence<I, A, B, C, D, E, F, G, H, O>(
 
 export function sequence(...validators: NonEmptyArray<Validator<unknown, unknown>>): Validator<unknown, unknown> {
   return function (input) {
-    return validators.reduce(flatMap, Promise.resolve(success(input)) as ReturnType<Validator<unknown, unknown>>);
+    return validators.reduce(flatMap, Promise.resolve(resultSuccess(input)) as ReturnType<Validator<unknown, unknown>>);
   };
 }
 
@@ -208,7 +222,7 @@ export function parallel<I, O>(...validators: NonEmptyArray<Validator<I, O>>): V
       isFailure(result) ? result.failure : [],
     );
 
-    return isNonEmpty(failures) ? failure(failures) : success(input);
+    return isNonEmpty(failures) ? resultFailure(failures) : resultSuccess(input);
   };
 }
 
