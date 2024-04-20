@@ -1,5 +1,13 @@
 # demo
 
+## 1.2.2
+
+### Patch Changes
+
+- b296a74: Implement FieldValidationConfig - Supports "validationStrategy" option set per field
+- Updated dependencies [b296a74]
+  - formoid@2.2.0
+
 ## 1.2.1
 
 ### Patch Changes

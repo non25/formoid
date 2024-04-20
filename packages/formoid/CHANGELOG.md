@@ -1,5 +1,11 @@
 # formoid
 
+## 2.2.0
+
+### Minor Changes
+
+- b296a74: Implement FieldValidationConfig - Supports "validationStrategy" option set per field
+
 ## 2.1.1
 
 ### Patch Changes
