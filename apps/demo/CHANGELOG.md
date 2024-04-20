@@ -1,5 +1,16 @@
 # demo
 
+## 1.2.0
+
+### Minor Changes
+
+- aba8697: Add zod bindings for form validation
+
+### Patch Changes
+
+- Updated dependencies [aba8697]
+  - formoid@2.1.0
+
 ## 1.1.0
 
 ### Minor Changes
