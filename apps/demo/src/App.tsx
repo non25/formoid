@@ -1,5 +1,5 @@
-import { ZodValidation } from "~/forms";
+import { JobApplication } from "~/forms";
 
 export function App() {
-  return <ZodValidation />;
+  return <JobApplication />;
 }

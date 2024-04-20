@@ -1,7 +1,7 @@
-import { fromZodSchema, useCompositeForm, validator } from "formoid";
+import { fromZod, fromZodSchema, useCompositeForm, validator } from "formoid";
 import { z } from "zod";
 import { Button, TextField } from "~/common/components";
-import { customValidator, pipe } from "~/common/utils";
+import { customValidator } from "~/common/utils";
 import { isNonBlankString, isNonEmptyString } from "~/common/utils/refinements";
 
 type General = {
@@ -49,10 +49,16 @@ export function JobApplication() {
       initialValues,
       validationStrategy: "onBlur",
       validators: () => ({
-        name: pipe(
-          customValidator.nonBlankString(),
-          validator.chain(validator.maxLength(32, "Name should be <= 32 chars long")),
-        ),
+        name: {
+          validationStrategy: "onChange",
+          validator: fromZod(
+            z
+              .string()
+              .min(4, "Name should be >= 4 chars long")
+              .max(32, "Name should be <= 32 chars long")
+              .refine(isNonBlankString, "This field should not be blank"),
+          ),
+        },
         lastName: validator.sequence(
           customValidator.nonBlankString(),
           validator.maxLength(32, "Last Name should be <= 32 chars long"),
@@ -66,6 +72,8 @@ export function JobApplication() {
       },
       validationStrategy: "onBlur",
       validators({ fieldArray }) {
+        const technologies = fieldArray.technologies.map(({ name }) => name);
+
         return {
           experience: fromZodSchema({
             company: z.string().refine(isNonBlankString),
@@ -74,12 +82,7 @@ export function JobApplication() {
           technologies: fromZodSchema({
             name: z
               .string()
-              .refine(function (value) {
-                return isElementUnique(
-                  fieldArray.technologies.map(({ name }) => name),
-                  value,
-                );
-              }, "Please remove duplicates")
+              .refine((value) => isElementUnique(technologies, value), "Please remove duplicates")
               .refine(isNonEmptyString),
             years: z.string().transform(Number),
           }),
@@ -93,7 +96,7 @@ export function JobApplication() {
       onFailure: (errors) => {
         console.log("Failure", errors);
       },
-      onSuccess: (values) => saveData(values),
+      onSuccess: (values) => saveData(values.form.name),
     });
 
   return (
