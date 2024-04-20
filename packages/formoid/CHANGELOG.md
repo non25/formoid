@@ -1,5 +1,11 @@
 # formoid
 
+## 2.1.1
+
+### Patch Changes
+
+- 40aafdd: Update dependencies and decrease react version to <=17.0.0
+
 ## 2.1.0
 
 ### Minor Changes
