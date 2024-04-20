@@ -3,7 +3,7 @@
     "declaration": true,
     "esModuleInterop": true,
     "module": "es6",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "noErrorTruncation": true,
     "outDir": "lib",
     "rootDir": "src",
