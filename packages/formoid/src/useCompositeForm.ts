@@ -1,7 +1,9 @@
 import { useRef, useState } from "react";
 import {
-  UnknownFieldArray,
+  FieldArrayValidationFailure,
+  FormErrors,
   Toggle,
+  UnknownFieldArray,
   ValidatedValues,
   ValidationSchema,
   ValidationStrategy,
@@ -9,8 +11,6 @@ import {
   makeFieldProps,
   validateCompositeFieldArray,
   validateForm,
-  FormErrors,
-  FieldArrayValidationFailure,
 } from "./Form";
 import { UnknownRecord, forEach, map } from "./Record";
 import { isFailure, isSuccess } from "./Result";

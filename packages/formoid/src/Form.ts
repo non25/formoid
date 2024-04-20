@@ -110,6 +110,20 @@ export function formStateManager<T extends UnknownRecord>(state: FormState<T>) {
   };
 }
 
+function getFieldValidationConfig<
+  T extends FieldValidationConfig<unknown, unknown> | Validator<unknown, unknown> | null,
+>(schemaValue: T, validationStrategy: ValidationStrategy) {
+  if (schemaValue === null) {
+    return { validationStrategy: "onSubmit", validator: of } as FieldValidationConfig<unknown, unknown>;
+  } else if ("validationStrategy" in schemaValue) {
+    return schemaValue as FieldValidationConfig<unknown, unknown>;
+  } else if (schemaValue instanceof Function) {
+    return { validationStrategy, validator: schemaValue } as FieldValidationConfig<unknown, unknown>;
+  } else {
+    return { validationStrategy: "onSubmit", validator: of } as FieldValidationConfig<unknown, unknown>;
+  }
+}
+
 /* FieldProps */
 type FieldPropsConfig<T extends UnknownRecord, S extends ValidationSchema<T>> = {
   form: ReturnType<typeof useFormState<T>>;
@@ -122,29 +136,29 @@ export function makeFieldProps<T extends UnknownRecord, S extends ValidationSche
   schema,
   validationStrategy,
 }: FieldPropsConfig<T, S>) {
-  function validate<K extends keyof T>(key: K) {
-    const validator = schema[key] as Validator<T[K], unknown> | null;
-
-    validator?.(form.state[key].value).then((result) => {
-      form.setErrors(key, isFailure(result) ? result.failure : null);
-    });
-  }
-
   return function fieldProps<K extends keyof T>(key: K): FieldProps<T[K]> {
     return {
       ...form.state[key],
-      onBlur: () => {
+      onBlur() {
         form.blur(key);
 
-        if (validationStrategy === "onBlur") {
-          validate(key);
+        const config = getFieldValidationConfig(schema[key] as never, validationStrategy);
+
+        if (config.validationStrategy === "onBlur") {
+          return config
+            .validator(form.state[key].value)
+            .then((result) => form.setErrors(key, isFailure(result) ? result.failure : null));
         }
       },
-      onChange: (value: T[K]) => {
+      onChange(value: T[K]) {
         form.change(key, value);
 
-        if (validationStrategy === "onChange") {
-          validate(key);
+        const config = getFieldValidationConfig(schema[key] as never, validationStrategy);
+
+        if (config.validationStrategy === "onChange") {
+          return config
+            .validator(value)
+            .then((result) => form.setErrors(key, isFailure(result) ? result.failure : null));
         }
       },
     };
@@ -163,30 +177,30 @@ export function makeFieldGroups<T extends UnknownRecord, S extends ValidationSch
   schema,
   validationStrategy,
 }: FieldGroupsConfig<T, S>): Array<FieldGroup<T>> {
-  function validate<K extends keyof T>(index: number, key: K) {
-    const validator = schema[key] as Validator<T[typeof key], unknown> | null | undefined;
-
-    validator?.(fieldArray.state[index][key].value).then((result) => {
-      fieldArray.setErrors(index, key, isFailure(result) ? result.failure : null);
-    });
-  }
-
-  return fieldArray.state.map((groupState, index) => {
-    return map(groupState, (group, key) => {
+  return fieldArray.state.map(function (groupState, index) {
+    return map(groupState, function (group, key) {
       return {
         ...group,
-        onBlur: () => {
+        onBlur() {
           fieldArray.blur(index, key);
 
-          if (validationStrategy === "onBlur") {
-            validate(index, key);
+          const config = getFieldValidationConfig(schema[key] as never, validationStrategy);
+
+          if (config.validationStrategy === "onBlur") {
+            return config
+              .validator(fieldArray.state[index][key].value)
+              .then((result) => fieldArray.setErrors(index, key, isFailure(result) ? result.failure : null));
           }
         },
-        onChange: (value: T[typeof key]) => {
+        onChange(value: T[typeof key]) {
           fieldArray.change(index, key, value);
 
-          if (validationStrategy === "onChange") {
-            validate(index, key);
+          const config = getFieldValidationConfig(schema[key] as never, validationStrategy);
+
+          if (config.validationStrategy === "onChange") {
+            return config
+              .validator(value)
+              .then((result) => fieldArray.setErrors(index, key, isFailure(result) ? result.failure : null));
           }
         },
       };
@@ -203,11 +217,20 @@ function validateRecord<T extends Record<string, Result<unknown, unknown>>, F, S
 
 /* Form validation */
 export type ValidationSchema<T extends UnknownRecord> = {
-  [K in keyof T]: Validator<T[K], unknown> | null;
+  [K in keyof T]: FieldValidationConfig<T[K], unknown> | Validator<T[K], unknown> | null;
+};
+
+export type FieldValidationConfig<I, O> = {
+  validationStrategy: ValidationStrategy;
+  validator: Validator<I, O>;
 };
 
 export type ValidatedValues<T extends UnknownRecord, S extends ValidationSchema<T>> = {
-  [K in keyof T]: S[K] extends Validator<T[K], infer O> ? O : T[K];
+  [K in keyof T]: S[K] extends FieldValidationConfig<T[K], infer O>
+    ? O
+    : S[K] extends Validator<T[K], infer O>
+      ? O
+      : T[K];
 };
 
 type ValidationResult<T extends UnknownRecord, S extends ValidationSchema<T>> = Result<
@@ -219,11 +242,10 @@ export async function validateForm<T extends UnknownRecord, S extends Validation
   values: T,
   schema: S,
 ): Promise<ValidationResult<T, S>> {
-  const validationEntries = entries(schema).map(async ([fieldName, validator]) => {
-    const value = values[fieldName as keyof T];
-    const fieldValidator = (validator ?? of<T[keyof T]>) as Validator<T[keyof T], unknown>;
+  const validationEntries = entries(schema).map(async ([fieldName, schemaValue]) => {
+    const { validator } = getFieldValidationConfig(schemaValue as never, "onSubmit");
 
-    return [fieldName, await fieldValidator(value)] as const;
+    return [fieldName, await validator(values[fieldName as keyof T])] as const;
   });
   const result = Object.fromEntries(await Promise.all(validationEntries));
 

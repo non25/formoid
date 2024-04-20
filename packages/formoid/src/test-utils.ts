@@ -84,8 +84,11 @@ export const loginSchema: (values: LoginFormValues) => ValidationSchema<LoginFor
       match(/(?=.*\d)/, "Password must contain at least 1 digit!"),
     ),
   ),
-  confirmPassword: sequence(
-    nonBlankStringValidator,
-    fromPredicate((confirm) => confirm === password, "Passwords do not match!"),
-  ),
+  confirmPassword: {
+    validationStrategy: "onChange",
+    validator: sequence(
+      nonBlankStringValidator,
+      fromPredicate((confirm) => confirm === password, "Passwords do not match!"),
+    ),
+  },
 });
