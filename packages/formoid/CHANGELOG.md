@@ -1,5 +1,11 @@
 # formoid
 
+## 2.2.1
+
+### Patch Changes
+
+- 247a7a5: Re-export ./Array utils and Validator type
+
 ## 2.2.0
 
 ### Minor Changes
