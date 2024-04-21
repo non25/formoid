@@ -1,5 +1,12 @@
 # demo
 
+## 1.2.4
+
+### Patch Changes
+
+- Updated dependencies [d982295]
+  - formoid@2.2.2
+
 ## 1.2.3
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # formoid
 
+## 2.2.2
+
+### Patch Changes
+
+- d982295: Re-export ./Predicate and ./Result and rename Schema -> ZodSchema
+
 ## 2.2.1
 
 ### Patch Changes
