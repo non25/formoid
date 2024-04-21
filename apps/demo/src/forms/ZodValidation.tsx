@@ -1,7 +1,25 @@
-import { fromZodSchema, useForm } from "formoid";
+import { UnknownRecord, ValidationStrategy, ZodSchema, fromZodSchema, useForm } from "formoid";
 import { z } from "zod";
 import { Button, TextField } from "~/common/components";
 import { isNonBlankString } from "~/common/utils/refinements";
+
+export type ZodFormConfig<T extends UnknownRecord, S extends ZodSchema<T>> = {
+  initialValues: T;
+  schema: ((values: T) => S) | S;
+  validationStrategy: ValidationStrategy;
+};
+
+export function useZodForm<T extends UnknownRecord, S extends ZodSchema<T>>({
+  initialValues,
+  schema,
+  validationStrategy,
+}: ZodFormConfig<T, S>) {
+  return useForm({
+    initialValues,
+    validationStrategy,
+    validators: (values) => fromZodSchema(schema instanceof Function ? schema(values) : schema),
+  });
+}
 
 type FormValues = {
   name: string;
@@ -16,28 +34,26 @@ const initialValues: FormValues = {
 };
 
 export function ZodValidation() {
-  const { fieldProps, handleSubmit, handleReset, isSubmitting } = useForm({
+  const { fieldProps, handleSubmit, handleReset, isSubmitting } = useZodForm({
     initialValues,
     validationStrategy: "onBlur",
-    validators({ password }) {
-      return fromZodSchema({
-        name: z
-          .string()
-          .min(4, "User name length must be min 4 chars!")
-          .max(64, "User name length must be max 64 chars!")
-          .refine(isNonBlankString, "This field should not be blank"),
-        password: z
-          .string()
-          .min(8, "User name length must be min 8 chars!")
-          .max(64, "User name length must be max 64 chars!")
-          .regex(/(?=.*[A-Z])/, "Password must contain at least 1 uppercase letter!")
-          .regex(/(?=.*[a-z])/, "Password must contain at least 1 lowercase letter!")
-          .regex(/(?=.*\d)/, "Password must contain at least 1 digit!"),
-        confirmPassword: z
-          .string()
-          .refine((confirm) => confirm === password, "Passwords do not match!"),
-      });
-    },
+    schema: ({ password }) => ({
+      name: z
+        .string()
+        .min(4, "User name length must be min 4 chars!")
+        .max(64, "User name length must be max 64 chars!")
+        .refine(isNonBlankString, "This field should not be blank"),
+      password: z
+        .string()
+        .min(8, "User name length must be min 8 chars!")
+        .max(64, "User name length must be max 64 chars!")
+        .regex(/(?=.*[A-Z])/, "Password must contain at least 1 uppercase letter!")
+        .regex(/(?=.*[a-z])/, "Password must contain at least 1 lowercase letter!")
+        .regex(/(?=.*\d)/, "Password must contain at least 1 digit!"),
+      confirmPassword: z
+        .string()
+        .refine((confirm) => confirm === password, "Passwords do not match!"),
+    }),
   });
 
   const submit = () =>
