@@ -15,30 +15,38 @@ import { UnknownRecord, forEach } from "./Record";
 export function useFormState<T extends UnknownRecord>(initialValues: T) {
   const persistentInitialValues = useRef(initialValues);
   const [state, setState] = useState(() => initializeForm(persistentInitialValues.current));
+  const stateRef = useRef(state);
 
   const errors = useMemo(() => getErrors(state), [state]);
   const values = useMemo(() => getValues(state), [state]);
 
   const blur = useCallback(<K extends keyof T>(key: K) => {
-    setState((state) => formStateManager(state).blur(key));
+    stateRef.current = formStateManager(stateRef.current).blur(key);
+    setState(stateRef.current);
   }, []);
   const change = useCallback(<K extends keyof T>(key: K, value: T[K]) => {
-    setState((state) => formStateManager(state).change(key, value));
+    stateRef.current = formStateManager(stateRef.current).change(key, value);
+    setState(stateRef.current);
   }, []);
   const disable = useCallback(<K extends keyof T>(key: K) => {
-    setState((state) => formStateManager(state).disable(key));
+    stateRef.current = formStateManager(stateRef.current).disable(key);
+    setState(stateRef.current);
   }, []);
   const enable = useCallback(<K extends keyof T>(key: K) => {
-    setState((state) => formStateManager(state).enable(key));
+    stateRef.current = formStateManager(stateRef.current).enable(key);
+    setState(stateRef.current);
   }, []);
   const reset = useCallback((update?: Update<T>): void => {
-    setState((state) => initializeForm(update ? update(getValues(state)) : persistentInitialValues.current));
+    stateRef.current = initializeForm(update ? update(getValues(stateRef.current)) : persistentInitialValues.current);
+    setState(stateRef.current);
   }, []);
   const setErrors: SetErrors<T> = useCallback((key, errors): void => {
-    setState((state) => formStateManager(state).setErrors(key, errors));
+    stateRef.current = formStateManager(stateRef.current).setErrors(key, errors);
+    setState(stateRef.current);
   }, []);
   const setValues = useCallback((update: Update<T>): void => {
-    setState((state) => updateValues(state, update(getValues(state))));
+    stateRef.current = updateValues(stateRef.current, update(getValues(stateRef.current)));
+    setState(stateRef.current);
   }, []);
 
   const toggle: Toggle = useCallback(
@@ -52,6 +60,7 @@ export function useFormState<T extends UnknownRecord>(initialValues: T) {
 
   return {
     state,
+    stateRef,
 
     errors,
     values,

@@ -138,7 +138,7 @@ export function makeFieldProps<T extends UnknownRecord, S extends ValidationSche
 }: FieldPropsConfig<T, S>) {
   return function fieldProps<K extends keyof T>(key: K): FieldProps<T[K]> {
     return {
-      ...form.state[key],
+      ...form.stateRef.current[key],
       onBlur() {
         form.blur(key);
 
@@ -146,7 +146,7 @@ export function makeFieldProps<T extends UnknownRecord, S extends ValidationSche
 
         if (config.validationStrategy === "onBlur") {
           return config
-            .validator(form.state[key].value)
+            .validator(form.stateRef.current[key].value)
             .then((result) => form.setErrors(key, isFailure(result) ? result.failure : null));
         }
       },
