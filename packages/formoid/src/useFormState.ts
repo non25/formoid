@@ -31,21 +31,15 @@ export function useFormState<T extends UnknownRecord>(initialValues: T) {
   const enable = useCallback(<K extends keyof T>(key: K) => {
     setState((state) => formStateManager(state).enable(key));
   }, []);
-  const reset = useCallback(
-    (update?: Update<T>): void => {
-      setState(initializeForm(update ? update(values) : persistentInitialValues.current));
-    },
-    [values],
-  );
+  const reset = useCallback((update?: Update<T>): void => {
+    setState((state) => initializeForm(update ? update(getValues(state)) : persistentInitialValues.current));
+  }, []);
   const setErrors: SetErrors<T> = useCallback((key, errors): void => {
     setState((state) => formStateManager(state).setErrors(key, errors));
   }, []);
-  const setValues = useCallback(
-    (update: Update<T>): void => {
-      setState((state) => updateValues(state, update(values)));
-    },
-    [values],
-  );
+  const setValues = useCallback((update: Update<T>): void => {
+    setState((state) => updateValues(state, update(getValues(state))));
+  }, []);
 
   const toggle: Toggle = useCallback(
     (action) => forEach(values, (_, key) => (action === "enable" ? enable : disable)(key)),
