@@ -14,7 +14,7 @@ import { UnknownRecord, forEach } from "./Record";
 
 export function useFormState<T extends UnknownRecord>(initialValues: T) {
   const persistentInitialValues = useRef(initialValues);
-  const [state, setState] = useState(initializeForm(persistentInitialValues.current));
+  const [state, setState] = useState(() => initializeForm(persistentInitialValues.current));
 
   const errors = useMemo(() => getErrors(state), [state]);
   const values = useMemo(() => getValues(state), [state]);

@@ -15,7 +15,7 @@ import { UnknownRecord, forEach } from "./Record";
 
 export function useFieldArrayState<T extends UnknownRecord>(initialValues: Array<T>) {
   const persistentInitialValues = useRef(initialValues);
-  const [state, setState] = useState(persistentInitialValues.current.map(initializeForm));
+  const [state, setState] = useState(() => persistentInitialValues.current.map(initializeForm));
 
   const errors = useMemo(() => state.map(getErrors), [state]);
   const values = useMemo(() => state.map(getValues), [state]);
