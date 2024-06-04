@@ -1,11 +1,11 @@
 export * from "./Array";
 export * from "./Form";
 export * from "./Predicate";
+export type { UnknownRecord } from "./Record";
 export * from "./Result";
 export * from "./useCompositeForm";
 export * from "./useFieldArray";
 export * from "./useForm";
 export * as validator from "./validator";
+export type { Validator } from "./validator";
 export * from "./zod";
-
-export { Validator } from "./validator";
